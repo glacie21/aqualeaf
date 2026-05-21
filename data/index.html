@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AquaLeaf Dashboard</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AquaLeaf</h1>
+            <p>Intelligent Plant Irrigation Platform</p>
+        </header>
+
+        <section class="status-card">
+            <div>
+                <span>Soil Moisture</span>
+                <strong id="moisture">-- %</strong>
+            </div>
+            <div>
+                <span>Pump State</span>
+                <strong id="pumpState">--</strong>
+            </div>
+            <div>
+                <span>Mode</span>
+                <strong id="mode">--</strong>
+            </div>
+        </section>
+
+        <section class="controls">
+            <label>
+                Manual Pump
+                <button id="pumpButton">Toggle Pump</button>
+            </label>
+            <label>
+                Threshold Low
+                <input id="thresholdLow" type="range" min="0" max="100" />
+                <span id="thresholdLowValue">--</span>
+            </label>
+            <label>
+                Threshold High
+                <input id="thresholdHigh" type="range" min="0" max="100" />
+                <span id="thresholdHighValue">--</span>
+            </label>
+            <label>
+                Automatic Mode
+                <input id="autoMode" type="checkbox" />
+            </label>
+            <button id="saveConfig">Save Configuration</button>
+        </section>
+    </div>
+    <script src="/app.js"></script>
+</body>
+</html>
