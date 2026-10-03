@@ -1,0 +1,65 @@
+# ============================================================
+#  AquaLeaf — .gitignore
+# ============================================================
+
+# ── PlatformIO build artefacts ──────────────────────────────
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# ── Secrets (NEVER commit real credentials) ─────────────────
+include/Secrets.h
+
+# ── IDE / Editor ────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# ── macOS ────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Windows ──────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Linux ────────────────────────────────────────────────────
+*~
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Compiled / build output ──────────────────────────────────
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.map
+
+# ── Python cache ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# ── Node (for tooling) ───────────────────────────────────────
+node_modules/
+npm-debug.log*
+
+# ── SPIFFS / LittleFS image ──────────────────────────────────
+*.spiffs.bin
+*.littlefs.bin
+
+# ── Test reports ─────────────────────────────────────────────
+test/reports/
