@@ -1,14 +1,15 @@
 :root {
-    --bg: #edf7f2;
-    --panel: #f6fbf8;
-    --panel-strong: #eefaf4;
-    --line: rgba(15, 62, 52, 0.09);
-    --text: #123c34;
-    --muted: #5b7f77;
-    --accent: #3bbd88;
-    --accent-soft: #dff9ee;
-    --accent-strong: #2ca774;
-    --shadow: rgba(18, 60, 52, 0.08);
+    --bg: #eaf4ee;
+    --panel: #f7faf8;
+    --panel-soft: #edf8f3;
+    --line: rgba(19, 61, 54, 0.08);
+    --text: #1c403b;
+    --muted: #607e77;
+    --accent: #4dc89b;
+    --accent-strong: #2ea77b;
+    --accent-soft: rgba(77, 200, 155, 0.14);
+    --shadow: rgba(17, 53, 48, 0.12);
+    --danger: #d26969;
 }
 
 * {
@@ -18,15 +19,15 @@
 body {
     margin: 0;
     min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #dff4ea 0%, #eef8f3 100%);
+    color: var(--text);
 }
 
 .container {
-    max-width: 760px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 24px 18px 36px;
+    padding: 30px 18px 42px;
 }
 
 .topbar {
@@ -34,108 +35,119 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    padding: 20px 18px;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    box-shadow: 0 10px 24px var(--shadow);
+    padding: 22px 24px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 28px;
+    box-shadow: 0 12px 28px var(--shadow);
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
 }
 
 .brand-mark {
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    font-size: 1.7rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ebfaf2, #def2e7);
+    border: 1px solid rgba(46, 167, 123, 0.1);
+    font-size: 2rem;
 }
 
 h1 {
     margin: 0;
-    font-size: clamp(2.2rem, 4vw, 3.2rem);
-    line-height: 1;
-    letter-spacing: -0.06em;
+    font-size: clamp(2.6rem, 4vw, 4rem);
+    letter-spacing: -0.07em;
+    line-height: 0.9;
 }
 
 .topbar p {
     margin: 8px 0 0;
     color: var(--muted);
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
 .status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: var(--accent-soft);
-    border: 1px solid rgba(59, 189, 136, 0.18);
+    gap: 10px;
+    padding: 12px 18px;
+    background: linear-gradient(180deg, var(--accent-soft), rgba(77, 200, 155, 0.08));
+    border: 1px solid rgba(46, 167, 123, 0.12);
     border-radius: 999px;
     color: var(--accent-strong);
     font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 800;
+    letter-spacing: 0.11em;
     text-transform: uppercase;
 }
 
 .status-pill::before {
     content: "";
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 0 4px rgba(59, 189, 136, 0.15);
+    box-shadow: 0 0 0 5px rgba(77, 200, 155, 0.18);
 }
 
 .dashboard {
-    margin-top: 20px;
+    margin-top: 26px;
 }
 
 .status-card {
     display: grid;
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 18px;
 }
 
 .metric-card {
+    position: relative;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 180px;
-    padding: 18px 18px 16px;
-    border-radius: 20px;
-    background: linear-gradient(180deg, #f0faf5, #eaf6f1);
+    min-height: 192px;
+    padding: 20px 18px 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(236, 246, 241, 0.9));
     border: 1px solid var(--line);
-    box-shadow: 0 8px 18px var(--shadow);
+    border-radius: 26px;
+    box-shadow: 0 12px 26px var(--shadow);
 }
 
-.metric-card.water,
-.metric-card.pump,
-.metric-card.mode {
-    background: linear-gradient(180deg, #f6fcf9, #edf7f3);
+.metric-card::after {
+    content: "";
+    position: absolute;
+    right: -26px;
+    bottom: -28px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(77, 200, 155, 0.08);
 }
 
 .metric-label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    position: relative;
+    z-index: 1;
     color: var(--muted);
-    font-weight: 700;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .metric-card strong {
-    margin-top: 10px;
-    font-size: clamp(2rem, 3vw, 2.6rem);
-    line-height: 1.1;
+    position: relative;
+    z-index: 1;
+    margin-top: 12px;
+    font-size: clamp(2rem, 3vw, 2.9rem);
     letter-spacing: -0.06em;
+    line-height: 1.1;
 }
 
 .metric-card strong.status-on {
@@ -143,21 +155,23 @@ h1 {
 }
 
 .metric-card strong.status-off {
-    color: #d65c5c;
+    color: var(--danger);
 }
 
 .metric-card small {
+    position: relative;
+    z-index: 1;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: 0.82rem;
 }
 
 .controls-panel {
     margin-top: 22px;
     padding: 18px 18px 12px;
     background: rgba(255, 255, 255, 0.72);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    box-shadow: 0 10px 22px var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    box-shadow: 0 12px 26px var(--shadow);
 }
 
 .control-row,
@@ -165,8 +179,8 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 14px 0;
+    gap: 18px;
+    padding: 15px 4px;
     border-bottom: 1px solid var(--line);
 }
 
@@ -175,16 +189,22 @@ h1 {
     gap: 10px;
 }
 
+.primary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .field-label {
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
     color: var(--muted);
 }
 
 .helper-text {
-    margin: 6px 0 0;
+    margin: 8px 0 0;
     color: var(--muted);
     font-size: 0.9rem;
 }
@@ -203,43 +223,44 @@ h1 {
 
 input[type="range"] {
     width: 100%;
-    accent-color: var(--accent);
+    accent-color: var(--accent-strong);
+    cursor: pointer;
 }
 
 button {
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 button:hover {
     transform: translateY(-1px);
-    opacity: 0.96;
+    box-shadow: 0 10px 20px rgba(46, 167, 123, 0.12);
 }
 
 .primary-button {
     padding: 12px 18px;
-    background: var(--accent);
+    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
     color: white;
-    box-shadow: 0 10px 18px rgba(59, 189, 136, 0.22);
+    box-shadow: 0 10px 20px rgba(46, 167, 123, 0.2);
 }
 
 .secondary-button {
     width: 100%;
     margin-top: 14px;
-    padding: 13px 18px;
-    background: #f1f7f4;
-    color: var(--text);
+    padding: 14px 18px;
+    background: linear-gradient(180deg, #f4faf7, #edf6f1);
     border: 1px solid var(--line);
+    color: var(--text);
 }
 
 .switch {
     position: relative;
     display: inline-block;
-    width: 56px;
+    width: 58px;
     height: 32px;
 }
 
@@ -253,7 +274,7 @@ button:hover {
     position: absolute;
     inset: 0;
     border-radius: 999px;
-    background: #dfeae6;
+    background: rgba(92, 118, 110, 0.18);
     transition: 0.2s ease;
 }
 
@@ -266,19 +287,19 @@ button:hover {
     top: 4px;
     border-radius: 50%;
     background: white;
-    box-shadow: 0 2px 8px rgba(18, 60, 52, 0.14);
+    box-shadow: 0 3px 8px rgba(16, 36, 32, 0.15);
     transition: 0.2s ease;
 }
 
 .switch input:checked + .slider {
-    background: var(--accent);
+    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
 }
 
 .switch input:checked + .slider::before {
-    transform: translateX(24px);
+    transform: translateX(26px);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
     .topbar,
     .toggle-row,
     .primary-row {
@@ -296,7 +317,7 @@ button:hover {
     }
 
     .topbar {
-        padding: 16px 14px;
+        padding: 18px 16px;
     }
 
     .primary-button {
