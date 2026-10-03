@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AquaLeaf Dashboard</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+    <div class="container">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">🌿</div>
+                <div>
+                    <h1>AquaLeaf</h1>
+                    <p>Intelligent Plant Irrigation Platform</p>
+                </div>
+            </div>
+            <div class="status-pill">System Online</div>
+        </header>
+
+        <main class="dashboard">
+            <section class="status-card" aria-label="System status">
+                <article class="metric-card water">
+                    <span class="metric-label">Soil Moisture</span>
+                    <strong id="moisture">-- %</strong>
+                    <small>Ideal for healthy roots</small>
+                </article>
+                <article class="metric-card pump">
+                    <span class="metric-label">Pump State</span>
+                    <strong id="pumpState">--</strong>
+                    <small>Watering flow status</small>
+                </article>
+                <article class="metric-card mode">
+                    <span class="metric-label">Mode</span>
+                    <strong id="mode">--</strong>
+                    <small>Automatic control</small>
+                </article>
+            </section>
+
+            <section class="controls-panel" aria-label="Controls panel">
+                <div class="control-row primary-row">
+                    <div>
+                        <label class="field-label">Manual Pump</label>
+                        <p class="helper-text">Turn watering on or off instantly.</p>
+                    </div>
+                    <button id="pumpButton" class="primary-button">Toggle Pump</button>
+                </div>
+
+                <div class="control-row">
+                    <div class="slider-header">
+                        <label class="field-label" for="thresholdLow">Threshold Low</label>
+                        <span id="thresholdLowValue">--</span>
+                    </div>
+                    <input id="thresholdLow" type="range" min="0" max="100" />
+                </div>
+
+                <div class="control-row">
+                    <div class="slider-header">
+                        <label class="field-label" for="thresholdHigh">Threshold High</label>
+                        <span id="thresholdHighValue">--</span>
+                    </div>
+                    <input id="thresholdHigh" type="range" min="0" max="100" />
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <label class="field-label" for="autoMode">Automatic Mode</label>
+                        <p class="helper-text">Let the system manage watering automatically.</p>
+                    </div>
+                    <label class="switch">
+                        <input id="autoMode" type="checkbox" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button id="saveConfig" class="secondary-button">Save Configuration</button>
+            </section>
+        </main>
+    </div>
+    <script src="/app.js"></script>
+</body>
+</html>
