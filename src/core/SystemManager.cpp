@@ -6,6 +6,7 @@
 
 #include "SystemManager.h"
 #include "Config.h"
+#include "Pins.h"
 #include "Secrets.h"
 #include <ArduinoJson.h>
 #include <BlynkSimpleEsp8266.h>
@@ -54,6 +55,7 @@ SystemManager::SystemManager()
 }
 
 void SystemManager::begin() {
+    s_instance = this;
     logger.begin();
     initializeHardware();
     storage.begin();
@@ -61,7 +63,6 @@ void SystemManager::begin() {
     initializeServices();
     logger.info("AquaLeaf SystemManager started");
     deviceState.systemState = SystemState::RUNNING;
-    s_instance = this;
 }
 
 void SystemManager::initializeHardware() {
@@ -172,7 +173,7 @@ void SystemManager::publishTelemetry() {
         Blynk.virtualWrite(BLYNK_VPIN_MOISTURE, latestSensorData.moisturePercent);
         Blynk.virtualWrite(BLYNK_VPIN_PUMP_STATE, pump.isOn() ? 1 : 0);
         Blynk.virtualWrite(BLYNK_VPIN_THRESHOLD, wateringConfig.thresholdLow);
-        Blynk.virtualWrite(BLYNK_VPIN_AUTO_MODE, wateringConfig.autoMode ? 0 : 1);
+        Blynk.virtualWrite(BLYNK_VPIN_AUTO_MODE, wateringConfig.autoMode ? 1 : 0);
         Blynk.virtualWrite(BLYNK_VPIN_UPTIME, millis() / 60000);
         Blynk.virtualWrite(BLYNK_VPIN_RSSI, WiFi.RSSI());
         logger.debug("Updated Blynk dashboard");
@@ -197,8 +198,29 @@ void SystemManager::requestPump(bool on) {
 }
 
 void SystemManager::updateWateringConfig(uint8_t thresholdLow, uint8_t thresholdHigh, bool autoMode) {
-    wateringConfig.thresholdLow = thresholdLow;
-    wateringConfig.thresholdHigh = thresholdHigh;
+    int low = thresholdLow;
+    int high = thresholdHigh;
+
+    if (low < 0) low = 0;
+    if (high < 0) high = 0;
+    if (low > 100) low = 100;
+    if (high > 100) high = 100;
+
+    if (low > high) {
+        int temp = low;
+        low = high;
+        high = temp;
+    }
+
+    if (high - low < 5) {
+        high = min(100, low + 5);
+        if (high == low) {
+            high = min(100, low + 1);
+        }
+    }
+
+    wateringConfig.thresholdLow = static_cast<uint8_t>(low);
+    wateringConfig.thresholdHigh = static_cast<uint8_t>(high);
     wateringConfig.autoMode = autoMode;
     wateringConfig.manualOverride = false;
     storage.saveWateringConfig(wateringConfig);
@@ -240,13 +262,18 @@ BLYNK_WRITE(BLYNK_VPIN_PUMP_MANUAL) {
 BLYNK_WRITE(BLYNK_VPIN_THRESHOLD) {
     if (auto manager = SystemManager::getInstance()) {
         auto config = manager->getWateringConfig();
-        manager->updateWateringConfig(param.asInt(), config.thresholdHigh, config.autoMode);
+        int requestedLow = param.asInt();
+        if (requestedLow < 0) requestedLow = 0;
+        if (requestedLow >= config.thresholdHigh) {
+            requestedLow = config.thresholdHigh > 0 ? config.thresholdHigh - 5 : 0;
+        }
+        manager->updateWateringConfig(static_cast<uint8_t>(requestedLow), config.thresholdHigh, config.autoMode);
     }
 }
 
 BLYNK_WRITE(BLYNK_VPIN_AUTO_MODE) {
     if (auto manager = SystemManager::getInstance()) {
         auto config = manager->getWateringConfig();
-        manager->updateWateringConfig(config.thresholdLow, config.thresholdHigh, param.asInt() == 0);
+        manager->updateWateringConfig(config.thresholdLow, config.thresholdHigh, param.asInt() == 1);
     }
 }

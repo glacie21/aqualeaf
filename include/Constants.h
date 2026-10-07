@@ -95,7 +95,7 @@ constexpr float   MOISTURE_MAX_PCT   = 100.0f;
 constexpr uint8_t ADC_RESOLUTION     = 10;          ///< bits
 constexpr int     ADC_MAX_RAW        = 1023;
 constexpr uint8_t TOPIC_MAX_LEN      = 128;
-constexpr uint8_t PAYLOAD_MAX_LEN    = 256;
+constexpr uint16_t PAYLOAD_MAX_LEN   = 256;
 constexpr uint8_t DEVICE_ID_LEN      = 12;          ///< MAC-derived hex string
 
 // ============================================================

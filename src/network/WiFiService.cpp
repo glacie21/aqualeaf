@@ -6,6 +6,7 @@
 
 #include "WiFiService.h"
 #include "Config.h"
+#include "Secrets.h"
 #include <ESP8266WiFi.h>
 
 WiFiService::WiFiService(uint32_t connectTimeoutMs, uint32_t reconnectIntervalMs)

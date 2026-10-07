@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include "Constants.h"
 
@@ -21,7 +22,7 @@ public:
                 uint32_t reconnectIntervalMs);
     void begin();
     void update();
-    bool connected() const;
+    bool connected();
     bool publish(const char *topic, const String &payload);
 
 private:

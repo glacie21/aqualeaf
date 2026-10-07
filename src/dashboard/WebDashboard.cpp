@@ -5,10 +5,9 @@
  */
 
 #include "WebDashboard.h"
-#include "SystemManager.h"
+#include "../core/SystemManager.h"
 #include "Config.h"
 #include <FS.h>
-#include <SPIFFS.h>
 #include <ArduinoJson.h>
 
 WebDashboard::WebDashboard(uint16_t port)

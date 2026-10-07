@@ -5,6 +5,7 @@
  */
 
 #include "Logger.h"
+#include "Config.h"
 #include <Arduino.h>
 
 Logger::Logger(uint8_t minLevel)

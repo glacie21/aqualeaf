@@ -5,11 +5,13 @@
  */
 
 #include "ConfigStorage.h"
+#include "Config.h"
 #include "Constants.h"
 #include <EEPROM.h>
 
 bool ConfigStorage::begin() {
-    return EEPROM.begin(STORAGE_EEPROM_SIZE);
+    EEPROM.begin(STORAGE_EEPROM_SIZE);
+    return true;
 }
 
 WateringConfig ConfigStorage::loadWateringConfig() const {

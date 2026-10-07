@@ -44,7 +44,7 @@ void MQTTService::update() {
     reconnect();
 }
 
-bool MQTTService::connected() const {
+bool MQTTService::connected() {
     return client.connected();
 }
 
