@@ -28,14 +28,72 @@ AquaLeaf membantu pengguna mengelola penyiraman tanaman secara otomatis dan aman
 
 ```text
 .
-├── include/      # Konfigurasi pin, konstanta, dan kredensial
-├── src/          # Kode sumber proyek
-├── data/         # Asset dashboard web untuk SPIFFS
-├── docs/         # Dokumentasi arsitektur, wiring, API, dan flowchart
-├── test/         # Folder unit test
+├── data/                       # Asset dashboard web untuk SPIFFS
+│   ├── app.js
+│   ├── index.html
+│   └── style.css
+├── docs/                       # Dokumentasi proyek
+│   ├── api-documentation.md
+│   ├── architecture.md
+│   ├── flowchart.md
+│   └── wiring-diagram.md
+├── include/                    # Konfigurasi, konstanta, pin, dan kredensial
+│   ├── Config.h
+│   ├── Constants.h
+│   ├── Pins.h
+│   └── Secrets.example.h
+├── scripts/
+│   └── pre_build.py
+├── src/
+│   ├── actuators/
+│   │   ├── PumpController.cpp
+│   │   ├── PumpController.h
+│   │   ├── RelayModule.cpp
+│   │   └── RelayModule.h
+│   ├── core/
+│   │   ├── Scheduler.cpp
+│   │   ├── Scheduler.h
+│   │   ├── SystemManager.cpp
+│   │   └── SystemManager.h
+│   ├── dashboard/
+│   │   ├── WebDashboard.cpp
+│   │   └── WebDashboard.h
+│   ├── models/
+│   │   ├── DeviceState.h
+│   │   ├── SensorData.h
+│   │   └── WateringConfig.h
+│   ├── network/
+│   │   ├── MQTTService.cpp
+│   │   ├── MQTTService.h
+│   │   ├── WiFiService.cpp
+│   │   └── WiFiService.h
+│   ├── sensors/
+│   │   ├── SoilMoistureSensor.cpp
+│   │   └── SoilMoistureSensor.h
+│   ├── storage/
+│   │   ├── ConfigStorage.cpp
+│   │   └── ConfigStorage.h
+│   ├── utils/
+│   │   ├── Helpers.cpp
+│   │   ├── Helpers.h
+│   │   ├── Logger.cpp
+│   │   └── Logger.h
+│   └── main.cpp
+├── test/
+│   ├── test_helpers/
+│   │   └── test_helpers.cpp
+│   ├── test_network/
+│   │   └── .gitkeep
+│   ├── test_pump/
+│   │   ├── .gitkeep
+│   │   └── test_pump_controller.cpp
+│   ├── test_scheduler/
+│   │   └── test_scheduler.cpp
+│   └── test_sensor/
+│       └── .gitkeep
+├── .gitignore
 ├── platformio.ini
-├── README.md
-└── scripts/      # Script pendukung proyek
+└── README.md
 ```
 
 ## Persyaratan

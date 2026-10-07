@@ -1,10 +1,10 @@
 /**
  * @file        Config.h
  * @project     AquaLeaf — Intelligent Plant Irrigation Platform
- * @brief       Central runtime configuration constants
+ * @brief       Konfigurasi runtime utama sistem
  * @author      AquaLeaf Team
  * @version     1.0.0
- * @date        2025
+ * @date        2026-10-07
  *
  * Edit these values to tune the system behaviour without touching
  * any other source file.  Hardware pin assignments live in Pins.h;
