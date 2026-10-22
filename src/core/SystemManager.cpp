@@ -39,7 +39,8 @@ SystemManager::SystemManager()
       logger(LOG_LEVEL),
       lastSensorReadMs(0),
       lastPublishMs(0),
-      lastDashboardMs(0) {
+      lastDashboardMs(0),
+      blynkEnabled(false) {
     deviceState.systemState = SystemState::BOOT;
     deviceState.networkStatus = NetworkStatus::DISCONNECTED;
     deviceState.mqttStatus = MQTTStatus::DISCONNECTED;
@@ -60,20 +61,18 @@ void SystemManager::begin() {
     initializeHardware();
     storage.begin();
     wateringConfig = storage.loadWateringConfig();
+    deviceState.operatingMode = wateringConfig.autoMode ? OperatingMode::AUTO : OperatingMode::MANUAL;
     initializeServices();
     logger.info("AquaLeaf SystemManager started");
     deviceState.systemState = SystemState::RUNNING;
 }
 
 void SystemManager::initializeHardware() {
-    Serial.begin(SERIAL_BAUD_RATE);
-    delay(100);
     logger.info("Booting hardware modules");
     pinMode(PIN_LED_STATUS, OUTPUT);
     pinMode(PIN_LED_PUMP, OUTPUT);
     digitalWrite(PIN_LED_STATUS, LOW);
     digitalWrite(PIN_LED_PUMP, LOW);
-    pinMode(PIN_RELAY, OUTPUT);
     pump.begin();
     sensor.begin();
     digitalWrite(PIN_LED_STATUS, HIGH);
@@ -85,9 +84,14 @@ void SystemManager::initializeServices() {
     mqtt.begin();
     dashboard.setManager(this);
     dashboard.begin();
-    if (wifi.isConnected()) {
+
+    // Blynk hanya diaktifkan jika token sudah diisi; reconnect ditangani Blynk.run().
+    blynkEnabled = strlen(BLYNK_AUTH_TOKEN) > 0 &&
+                   strcmp(BLYNK_AUTH_TOKEN, "YOUR_BLYNK_AUTH_TOKEN_HERE") != 0;
+    if (blynkEnabled) {
         Blynk.config(BLYNK_AUTH_TOKEN, BLYNK_SERVER, BLYNK_PORT);
-        Blynk.connect();
+    } else {
+        logger.warn("Blynk token not set, Blynk disabled");
     }
 }
 
@@ -99,9 +103,7 @@ void SystemManager::update() {
 
     if (wifi.isConnected()) {
         deviceState.networkStatus = NetworkStatus::CONNECTED;
-        if (!Blynk.connected()) {
-            Blynk.connect();
-        } else {
+        if (blynkEnabled) {
             Blynk.run();
         }
     } else {
@@ -134,7 +136,7 @@ void SystemManager::processSensorCycle() {
 
     if (deviceState.operatingMode == OperatingMode::AUTO && wateringConfig.autoMode && !wateringConfig.manualOverride) {
         if (latestSensorData.moisturePercent <= wateringConfig.thresholdLow) {
-            if (pump.activate()) {
+            if (!pump.isOn() && pump.activate()) {
                 logger.info("Automatic watering: pump ON");
             }
         } else if (latestSensorData.moisturePercent >= wateringConfig.thresholdHigh) {
@@ -149,10 +151,11 @@ void SystemManager::processSensorCycle() {
 }
 
 void SystemManager::publishTelemetry() {
-    DynamicJsonDocument payload(512);
+    JsonDocument payload;
     payload["moisture_pct"] = latestSensorData.moisturePercent;
     payload["moisture_raw"] = latestSensorData.rawValue;
     payload["pump_state"] = static_cast<uint8_t>(deviceState.pumpState);
+    payload["pump_cycles"] = pump.getCycleCount();
     payload["auto_mode"] = wateringConfig.autoMode;
     payload["manual_override"] = wateringConfig.manualOverride;
     payload["threshold_low"] = wateringConfig.thresholdLow;
@@ -176,6 +179,7 @@ void SystemManager::publishTelemetry() {
         Blynk.virtualWrite(BLYNK_VPIN_AUTO_MODE, wateringConfig.autoMode ? 1 : 0);
         Blynk.virtualWrite(BLYNK_VPIN_UPTIME, millis() / 60000);
         Blynk.virtualWrite(BLYNK_VPIN_RSSI, WiFi.RSSI());
+        Blynk.virtualWrite(BLYNK_VPIN_PUMP_COUNT, pump.getCycleCount());
         logger.debug("Updated Blynk dashboard");
     }
 }
@@ -189,12 +193,18 @@ void SystemManager::requestPump(bool on) {
     deviceState.operatingMode = OperatingMode::MANUAL;
 
     if (on) {
-        pump.activate();
-        logger.info("Manual pump request: ON");
+        if (pump.activate()) {
+            logger.info("Manual pump request: ON");
+        } else {
+            logger.warn("Manual pump request rejected (cooldown/fault lockout)");
+        }
     } else {
         pump.deactivate();
         logger.info("Manual pump request: OFF");
     }
+
+    deviceState.pumpState = pump.getState();
+    digitalWrite(PIN_LED_PUMP, pump.isOn() ? HIGH : LOW);
 }
 
 void SystemManager::updateWateringConfig(uint8_t thresholdLow, uint8_t thresholdHigh, bool autoMode) {
@@ -223,15 +233,19 @@ void SystemManager::updateWateringConfig(uint8_t thresholdLow, uint8_t threshold
     wateringConfig.thresholdHigh = static_cast<uint8_t>(high);
     wateringConfig.autoMode = autoMode;
     wateringConfig.manualOverride = false;
+    // Menyimpan konfigurasi mengakhiri override manual dan mengembalikan mode sesuai autoMode.
+    deviceState.operatingMode = autoMode ? OperatingMode::AUTO : OperatingMode::MANUAL;
     storage.saveWateringConfig(wateringConfig);
     logger.info("Watering configuration updated");
 }
 
 String SystemManager::getStatusJson() const {
-    DynamicJsonDocument status(512);
+    JsonDocument status;
     status["moisture_pct"] = latestSensorData.moisturePercent;
     status["moisture_raw"] = latestSensorData.rawValue;
     status["pump_state"] = static_cast<uint8_t>(deviceState.pumpState);
+    status["pump_cycles"] = pump.getCycleCount();
+    status["operating_mode"] = static_cast<uint8_t>(deviceState.operatingMode);
     status["system_state"] = static_cast<uint8_t>(deviceState.systemState);
     status["network_status"] = static_cast<uint8_t>(deviceState.networkStatus);
     status["mqtt_status"] = static_cast<uint8_t>(deviceState.mqttStatus);
@@ -265,7 +279,7 @@ BLYNK_WRITE(BLYNK_VPIN_THRESHOLD) {
         int requestedLow = param.asInt();
         if (requestedLow < 0) requestedLow = 0;
         if (requestedLow >= config.thresholdHigh) {
-            requestedLow = config.thresholdHigh > 0 ? config.thresholdHigh - 5 : 0;
+            requestedLow = max(0, config.thresholdHigh - 5);
         }
         manager->updateWateringConfig(static_cast<uint8_t>(requestedLow), config.thresholdHigh, config.autoMode);
     }

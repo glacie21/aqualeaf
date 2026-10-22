@@ -53,4 +53,5 @@ private:
     uint32_t lastSensorReadMs;
     uint32_t lastPublishMs;
     uint32_t lastDashboardMs;
+    bool blynkEnabled;
 };

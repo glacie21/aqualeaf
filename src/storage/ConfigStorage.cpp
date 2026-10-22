@@ -29,6 +29,12 @@ WateringConfig ConfigStorage::loadWateringConfig() const {
     config.thresholdHigh = EEPROM.read(base + 2);
     config.autoMode = EEPROM.read(base + 3) == 1;
     config.manualOverride = false;
+
+    // Data EEPROM rusak/di luar rentang -> kembali ke default.
+    if (config.thresholdHigh > 100 || config.thresholdLow >= config.thresholdHigh) {
+        config.thresholdLow = MOISTURE_THRESHOLD_LOW;
+        config.thresholdHigh = MOISTURE_THRESHOLD_HIGH;
+    }
     return config;
 }
 

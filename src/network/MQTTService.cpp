@@ -28,6 +28,8 @@ MQTTService::MQTTService(const char *host,
 
 void MQTTService::begin() {
     client.setServer(host, port);
+    client.setKeepAlive(keepalive);
+    client.setBufferSize(PAYLOAD_MAX_LEN + TOPIC_MAX_LEN);
 }
 
 void MQTTService::update() {

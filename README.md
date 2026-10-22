@@ -28,7 +28,7 @@ AquaLeaf membantu pengguna mengelola penyiraman tanaman secara otomatis dan aman
 
 ```text
 .
-├── data/                       # Asset dashboard web untuk SPIFFS
+├── data/                       # Asset dashboard web untuk LittleFS
 │   ├── app.js
 │   ├── index.html
 │   └── style.css
@@ -90,7 +90,7 @@ AquaLeaf membantu pengguna mengelola penyiraman tanaman secara otomatis dan aman
 │   ├── test_scheduler/
 │   │   └── test_scheduler.cpp
 │   └── test_sensor/
-│       └── .gitkeep
+│       └── test_soil_moisture_sensor.cpp
 ├── .gitignore
 ├── platformio.ini
 └── README.md
@@ -113,7 +113,8 @@ AquaLeaf membantu pengguna mengelola penyiraman tanaman secara otomatis dan aman
    - `WIFI_PASSWORD`
    - `MQTT_USERNAME`
    - `MQTT_PASSWORD`
-   - `BLYNK_AUTH_TOKEN`
+   - `BLYNK_TEMPLATE_ID`, `BLYNK_TEMPLATE_NAME`, `BLYNK_AUTH_TOKEN` (biarkan token placeholder untuk menonaktifkan Blynk)
+   - `WEB_ADMIN_USER`, `WEB_ADMIN_PASS` (login dashboard web, ganti nilai default)
 3. Pastikan konfigurasi pin dan threshold sudah sesuai dengan hardware yang digunakan
 
 ## Quick Start
@@ -124,7 +125,7 @@ AquaLeaf membantu pengguna mengelola penyiraman tanaman secara otomatis dan aman
 platformio run
 ```
 
-### Upload dashboard web ke SPIFFS
+### Upload dashboard web ke LittleFS
 
 ```bash
 platformio run --target uploadfs
@@ -144,7 +145,7 @@ Jalankan pengujian dengan PlatformIO:
 platformio test -e nodemcu_v2
 ```
 
-Jika menggunakan board atau environment lain, sesuaikan nama environment sesuai konfigurasi di `platformio.ini`.
+Unit test dijalankan di perangkat (board harus terhubung via USB). Jika menggunakan board atau environment lain, sesuaikan nama environment sesuai konfigurasi di `platformio.ini`.
 
 ## Cara Kerja Sistem
 
@@ -157,7 +158,9 @@ Jika menggunakan board atau environment lain, sesuaikan nama environment sesuai 
 
 ## Dashboard Web
 
-Buka browser ke IP NodeMCU untuk melihat status real-time, mengubah threshold, serta mengontrol pompa secara manual.
+Buka browser ke IP NodeMCU lalu login dengan `WEB_ADMIN_USER` / `WEB_ADMIN_PASS` untuk melihat status real-time, mengubah threshold, serta mengontrol pompa secara manual.
+
+Menyalakan/mematikan pompa secara manual akan mengaktifkan mode MANUAL (penyiraman otomatis berhenti). Tekan **Save Configuration** untuk kembali ke mode otomatis.
 
 ## Dokumentasi
 
