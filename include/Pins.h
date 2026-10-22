@@ -34,8 +34,11 @@
 // ============================================================
 /**
  * Soil moisture sensor analog output → NodeMCU A0.
- * The ESP8266 ADC reads 0–1 V, so use a voltage divider if the
- * sensor outputs 0–3.3 V (R1 = 100 kΩ, R2 = 220 kΩ → ×0.31).
+ * The bare ESP8266 ADC reads 0–1 V, but NodeMCU boards already include a
+ * 220 kΩ / 100 kΩ divider on the A0 pin, so a 0–3.3 V sensor can be wired
+ * directly. Do NOT add a second divider: the reading would top out around
+ * raw ≈ 320, below MOISTURE_RAW_WET, and the soil would always read 100 %.
+ * Only a bare ESP-12 module (no divider on board) needs an external one.
  */
 #define PIN_MOISTURE_SENSOR     A0
 

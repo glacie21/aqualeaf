@@ -58,6 +58,33 @@ void test_pump_cooldown_expires(void) {
     TEST_ASSERT_TRUE(pump.activate());
 }
 
+void test_pump_daily_limit(void) {
+    // Batas harian (30 ms) lebih pendek dari max on-time (50 ms).
+    PumpController limited(PIN_RELAY, RELAY_ON, RELAY_OFF, 50, 10, 1, 30);
+    limited.begin();
+    delay(5);
+    TEST_ASSERT_TRUE(limited.activate());
+    delay(35);
+    limited.update();
+    TEST_ASSERT_EQUAL(PumpState::COOLDOWN, limited.getState());
+    TEST_ASSERT_TRUE(limited.isDailyLimitReached());
+    delay(15);
+    limited.update();
+    TEST_ASSERT_EQUAL(PumpState::OFF, limited.getState());
+    // Cooldown selesai, tetapi jatah harian sudah habis.
+    TEST_ASSERT_FALSE(limited.activate());
+    TEST_ASSERT_FALSE(limited.isOn());
+}
+
+void test_pump_no_daily_limit_by_default(void) {
+    beginPump();
+    TEST_ASSERT_TRUE(pump.activate());
+    delay(10);
+    TEST_ASSERT_FALSE(pump.isDailyLimitReached());
+    TEST_ASSERT_TRUE(pump.getOnTimeTodayMs() >= 10);
+    pump.deactivate();
+}
+
 void setup() {
     delay(100);
     UNITY_BEGIN();
@@ -66,6 +93,8 @@ void setup() {
     RUN_TEST(test_pump_timeout_fault);
     RUN_TEST(test_pump_lockout_survives_deactivate);
     RUN_TEST(test_pump_cooldown_expires);
+    RUN_TEST(test_pump_daily_limit);
+    RUN_TEST(test_pump_no_daily_limit_by_default);
     UNITY_END();
 }
 

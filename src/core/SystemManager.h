@@ -27,7 +27,8 @@ public:
     void begin();
     void update();
     void requestPump(bool on);
-    void updateWateringConfig(uint8_t thresholdLow, uint8_t thresholdHigh, bool autoMode);
+    /** Nilai di-clamp ke 0–100 dan dijaga jaraknya minimal MOISTURE_THRESHOLD_MIN_GAP. */
+    void updateWateringConfig(int thresholdLow, int thresholdHigh, bool autoMode);
     String getStatusJson() const;
     const WateringConfig &getWateringConfig() const;
     static SystemManager *getInstance();
@@ -36,6 +37,11 @@ private:
     void initializeHardware();
     void initializeServices();
     void processSensorCycle();
+    void runAutomaticWatering();
+    void startAutomaticCycle(float moisture);
+    void checkManualOverrideExpiry();
+    bool isAutomaticControlActive() const;
+    uint32_t getOverrideRemainingMs() const;
     void publishTelemetry();
     void updateDashboard();
 
@@ -53,5 +59,10 @@ private:
     uint32_t lastSensorReadMs;
     uint32_t lastPublishMs;
     uint32_t lastDashboardMs;
+    uint32_t manualOverrideMs;
     bool blynkEnabled;
+    bool sensorFault;
+    bool wateringLockout;
+    uint8_t ineffectiveCycles;
+    float cycleStartMoisture;   ///< Kelembaban saat siklus otomatis terakhir dimulai; < 0 = belum ada
 };

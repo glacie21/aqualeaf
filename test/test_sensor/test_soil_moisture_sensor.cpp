@@ -30,6 +30,18 @@ void test_sensor_clamps_wet(void) {
     TEST_ASSERT_EQUAL_FLOAT(100.0f, sensor.read());
 }
 
+void test_sensor_valid_range(void) {
+    // Rentang 0–1023 mencakup semua nilai ADC: selalu valid.
+    SoilMoistureSensor wide(PIN_MOISTURE_SENSOR, 1023, 0, 1, 1, 0, 1023);
+    wide.read();
+    TEST_ASSERT_TRUE(wide.isLastReadingValid());
+
+    // Rentang di atas ADC_MAX_RAW tidak mungkin tercapai: selalu fault.
+    SoilMoistureSensor impossible(PIN_MOISTURE_SENSOR, 1023, 0, 1, 1, 1024, 1024);
+    impossible.read();
+    TEST_ASSERT_FALSE(impossible.isLastReadingValid());
+}
+
 void setup() {
     delay(100);
     UNITY_BEGIN();
@@ -37,6 +49,7 @@ void setup() {
     RUN_TEST(test_sensor_linear_conversion);
     RUN_TEST(test_sensor_clamps_dry);
     RUN_TEST(test_sensor_clamps_wet);
+    RUN_TEST(test_sensor_valid_range);
     UNITY_END();
 }
 

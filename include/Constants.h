@@ -104,6 +104,7 @@ constexpr uint8_t DEVICE_ID_LEN      = 12;          ///< MAC-derived hex string
 constexpr uint32_t MS_PER_SECOND   = 1000UL;
 constexpr uint32_t MS_PER_MINUTE   = 60UL * MS_PER_SECOND;
 constexpr uint32_t MS_PER_HOUR     = 60UL * MS_PER_MINUTE;
+constexpr uint32_t MS_PER_DAY      = 24UL * MS_PER_HOUR;
 
 // ============================================================
 //  Error codes

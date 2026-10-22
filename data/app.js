@@ -10,6 +10,10 @@ const state = {
     manualOverride: false,
     thresholdLow: 30,
     thresholdHigh: 60,
+    sensorFault: false,
+    wateringLockout: false,
+    dailyLimitReached: false,
+    overrideRemainingS: 0,
 };
 
 // True while the user has unsaved changes in the config form,
@@ -18,6 +22,7 @@ let configDirty = false;
 
 const elements = {
     statusPill: document.getElementById('statusPill'),
+    alerts: document.getElementById('alerts'),
     moisture: document.getElementById('moisture'),
     pumpState: document.getElementById('pumpState'),
     mode: document.getElementById('mode'),
@@ -43,7 +48,32 @@ function applyStatus(data) {
     state.manualOverride = data.operating_mode !== OPERATING_MODE_AUTO || data.manual_override;
     state.thresholdLow = data.threshold_low;
     state.thresholdHigh = data.threshold_high;
+    state.sensorFault = data.sensor_fault;
+    state.wateringLockout = data.watering_lockout;
+    state.dailyLimitReached = data.daily_limit_reached;
+    state.overrideRemainingS = data.override_remaining_s;
     render();
+}
+
+function renderAlerts() {
+    const messages = [];
+    if (state.sensorFault) {
+        messages.push('Sensor fault: moisture reading out of range. Automatic watering is paused — check the sensor wiring.');
+    }
+    if (state.wateringLockout) {
+        messages.push('Automatic watering locked: moisture did not rise after several cycles. Check the water tank and hose, then save the configuration to reset.');
+    }
+    if (state.dailyLimitReached) {
+        messages.push('Daily pump run-time limit reached. The pump stays off until the 24-hour window resets.');
+    }
+
+    elements.alerts.replaceChildren(...messages.map((text) => {
+        const item = document.createElement('p');
+        item.className = 'alert';
+        item.textContent = text;
+        return item;
+    }));
+    elements.alerts.hidden = messages.length === 0;
 }
 
 async function fetchStatus() {
@@ -99,9 +129,15 @@ function render() {
     elements.mode.textContent = isAuto ? 'AUTO' : 'MANUAL';
     elements.mode.classList.toggle('status-on', isAuto);
     elements.mode.classList.toggle('status-off', !isAuto);
-    elements.modeHint.textContent = isAuto
-        ? 'Automatic control'
-        : 'Save configuration to resume automatic mode';
+    if (isAuto) {
+        elements.modeHint.textContent = 'Automatic control';
+    } else if (state.autoMode && state.overrideRemainingS > 0) {
+        const minutes = Math.ceil(state.overrideRemainingS / 60);
+        elements.modeHint.textContent = `Manual override — auto resumes in ${minutes} min`;
+    } else {
+        elements.modeHint.textContent = 'Automatic mode disabled in configuration';
+    }
+    renderAlerts();
 
     if (!configDirty) {
         elements.thresholdLow.value = state.thresholdLow;

@@ -11,12 +11,16 @@ SoilMoistureSensor::SoilMoistureSensor(uint8_t analogPin,
                                        uint16_t rawDry,
                                        uint16_t rawWet,
                                        uint8_t samples,
-                                       uint16_t sampleDelayMs)
+                                       uint16_t sampleDelayMs,
+                                       uint16_t rawValidMin,
+                                       uint16_t rawValidMax)
     : pin(analogPin),
       rawDry(rawDry),
       rawWet(rawWet),
       samples(samples),
       sampleDelayMs(sampleDelayMs),
+      rawValidMin(rawValidMin),
+      rawValidMax(rawValidMax),
       lastPercentage(0.0f),
       lastRaw(0) {
 }
@@ -39,6 +43,10 @@ float SoilMoistureSensor::read() {
 
 float SoilMoistureSensor::getLastPercentage() const {
     return lastPercentage;
+}
+
+bool SoilMoistureSensor::isLastReadingValid() const {
+    return lastRaw >= rawValidMin && lastRaw <= rawValidMax;
 }
 
 uint16_t SoilMoistureSensor::getLastRaw() const {

@@ -78,10 +78,19 @@
 #define MOISTURE_THRESHOLD_LOW   30
 /** Percentage above which irrigation stops */
 #define MOISTURE_THRESHOLD_HIGH  60
+/** Minimum gap (%) enforced between the low and high thresholds */
+#define MOISTURE_THRESHOLD_MIN_GAP 5
 /** Number of ADC samples averaged per reading */
 #define MOISTURE_SAMPLES         10
 /** Delay (ms) between individual ADC samples */
 #define MOISTURE_SAMPLE_DELAY_MS 10
+/**
+ * Plausible raw ADC range. Readings outside it are treated as a sensor
+ * fault (disconnected wire, shorted probe) and automatic watering is
+ * suspended. Tune together with MOISTURE_RAW_DRY / MOISTURE_RAW_WET.
+ */
+#define MOISTURE_RAW_VALID_MIN   100
+#define MOISTURE_RAW_VALID_MAX   1000
 
 // ============================================================
 //  Pump / Relay
@@ -92,6 +101,18 @@
 #define PUMP_COOLDOWN_MS        300000UL  // 5 min
 /** Debounce delay (ms) after toggling relay */
 #define PUMP_RELAY_DEBOUNCE_MS  200UL
+/** Maximum total pump run time per 24 h window (ms), manual included */
+#define PUMP_DAILY_LIMIT_MS     600000UL  // 10 min
+/**
+ * Dry-run / stuck-sensor protection: an automatic cycle counts as
+ * ineffective when moisture rose less than PUMP_MIN_MOISTURE_RISE_PCT since
+ * the previous cycle started. After PUMP_MAX_INEFFECTIVE_CYCLES in a row,
+ * automatic watering is locked out until the configuration is saved again.
+ */
+#define PUMP_MIN_MOISTURE_RISE_PCT   2.0f
+#define PUMP_MAX_INEFFECTIVE_CYCLES  4
+/** A manual pump command suspends automatic mode for this long */
+#define MANUAL_OVERRIDE_TIMEOUT_MS   1800000UL  // 30 min
 
 // ============================================================
 //  Scheduler / Timing

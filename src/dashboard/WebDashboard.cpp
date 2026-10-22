@@ -122,9 +122,12 @@ void WebDashboard::handleApiConfig() {
         return;
     }
 
-    uint8_t thresholdLow = json["threshold_low"] | MOISTURE_THRESHOLD_LOW;
-    uint8_t thresholdHigh = json["threshold_high"] | MOISTURE_THRESHOLD_HIGH;
-    bool autoMode = json["auto_mode"] | true;
+    // Field yang tidak dikirim mempertahankan nilai aktif (partial update).
+    // Dibaca sebagai int agar nilai di luar rentang di-clamp, bukan terpotong ke uint8_t.
+    const WateringConfig &current = manager->getWateringConfig();
+    int thresholdLow = json["threshold_low"] | static_cast<int>(current.thresholdLow);
+    int thresholdHigh = json["threshold_high"] | static_cast<int>(current.thresholdHigh);
+    bool autoMode = json["auto_mode"] | current.autoMode;
     manager->updateWateringConfig(thresholdLow, thresholdHigh, autoMode);
     sendJson(manager->getStatusJson());
 }
