@@ -1,7 +1,7 @@
 /**
  * @file        PumpController.cpp
  * @project     AquaLeaf — Intelligent Plant Irrigation Platform
- * @brief       Implementasi logika safety pompa.
+ * @brief       Implementasi kontrol pompa; logika safety ada di PumpStateMachine.
  */
 
 #include "PumpController.h"
@@ -15,116 +15,54 @@ PumpController::PumpController(uint8_t relayPin,
                                uint32_t debounceMs,
                                uint32_t dailyLimitMs)
     : relay(relayPin, activeState, idleState),
-      state(PumpState::OFF),
-      maxOnMs(maxOnMs),
-      cooldownMs(cooldownMs),
-      debounceMs(debounceMs),
-      dailyLimitMs(dailyLimitMs),
-      lastChangeMs(0),
-      activationMs(0),
-      cycleCount(0),
-      windowStartMs(0),
-      windowOnMs(0) {
+      machine(maxOnMs, cooldownMs, debounceMs, dailyLimitMs) {
 }
 
 void PumpController::begin() {
     relay.begin();
-    state = PumpState::OFF;
-    lastChangeMs = millis();
-    windowStartMs = lastChangeMs;
-    windowOnMs = 0;
+    machine.reset(millis());
 }
 
 void PumpController::update() {
-    uint32_t now = millis();
-    rollDailyWindow(now);
-
-    if (state == PumpState::ON) {
-        if (now - activationMs >= maxOnMs) {
-            switchOff(now, PumpState::FAULT);
-            return;
-        }
-        if (isDailyLimitReached()) {
-            switchOff(now, PumpState::COOLDOWN);
-            return;
-        }
-    }
-
-    if ((state == PumpState::COOLDOWN || state == PumpState::FAULT) && now - lastChangeMs >= cooldownMs) {
-        state = PumpState::OFF;
-    }
+    machine.update(millis());
+    applyRelay();
 }
 
 bool PumpController::activate() {
-    uint32_t now = millis();
-    rollDailyWindow(now);
-
-    if (state == PumpState::ON) {
-        return true;
-    }
-    if (state == PumpState::COOLDOWN || state == PumpState::FAULT) {
-        return false;
-    }
-    if (now - lastChangeMs < debounceMs) {
-        return false;
-    }
-    if (isDailyLimitReached()) {
-        return false;
-    }
-
-    relay.setOn(true);
-    state = PumpState::ON;
-    activationMs = now;
-    lastChangeMs = now;
-    cycleCount++;
-    return true;
+    bool on = machine.activate(millis());
+    applyRelay();
+    return on;
 }
 
 bool PumpController::deactivate() {
-    if (state != PumpState::ON) {
-        // Sudah mati; jangan reset COOLDOWN/FAULT agar lockout tetap berlaku.
-        relay.setOn(false);
-        return false;
-    }
-    switchOff(millis(), PumpState::COOLDOWN);
-    return true;
-}
-
-void PumpController::switchOff(uint32_t now, PumpState nextState) {
+    bool changed = machine.deactivate(millis());
+    // Relay selalu dipaksa mati, bahkan jika state machine sudah OFF.
     relay.setOn(false);
-    windowOnMs += now - activationMs;
-    state = nextState;
-    lastChangeMs = now;
+    return changed;
 }
 
-void PumpController::rollDailyWindow(uint32_t now) {
-    if (now - windowStartMs < MS_PER_DAY) {
-        return;
+void PumpController::applyRelay() {
+    if (relay.isOn() != machine.isOn()) {
+        relay.setOn(machine.isOn());
     }
-    // Run yang sedang berjalan saat pergantian jendela dihitung penuh ke jendela baru.
-    windowStartMs = now;
-    windowOnMs = 0;
 }
 
 PumpState PumpController::getState() const {
-    return state;
+    return machine.getState();
 }
 
 bool PumpController::isOn() const {
-    return state == PumpState::ON;
+    return machine.isOn();
 }
 
 uint32_t PumpController::getCycleCount() const {
-    return cycleCount;
+    return machine.getCycleCount();
 }
 
 uint32_t PumpController::getOnTimeTodayMs() const {
-    if (state == PumpState::ON) {
-        return windowOnMs + (millis() - activationMs);
-    }
-    return windowOnMs;
+    return machine.getOnTimeTodayMs(millis());
 }
 
 bool PumpController::isDailyLimitReached() const {
-    return dailyLimitMs > 0 && getOnTimeTodayMs() >= dailyLimitMs;
+    return machine.isDailyLimitReached(millis());
 }

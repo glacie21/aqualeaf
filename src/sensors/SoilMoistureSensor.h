@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "models/SensorCalibration.h"
 
 class SoilMoistureSensor {
 public:
@@ -23,16 +24,16 @@ public:
     uint16_t getLastRaw() const;
     /** False when the last raw reading is outside the plausible range. */
     bool isLastReadingValid() const;
+    void setCalibration(const SensorCalibration &calibration);
+    SensorCalibration getCalibration() const;
 
 private:
     uint8_t pin;
-    uint16_t rawDry;
-    uint16_t rawWet;
+    SensorCalibration calibration;
     uint8_t samples;
     uint16_t sampleDelayMs;
     uint16_t rawValidMin;
     uint16_t rawValidMax;
     float lastPercentage;
     uint16_t lastRaw;
-    float convertRawToPercentage(uint16_t rawValue) const;
 };

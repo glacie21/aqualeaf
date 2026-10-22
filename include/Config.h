@@ -16,14 +16,31 @@
 // ============================================================
 //  WiFi & Networking
 // ============================================================
-/** SSID displayed when the captive-portal AP is active */
+/**
+ * Setup access point, started when no WiFi network can be joined.
+ * Connect to it and open http://192.168.4.1 (any URL is redirected there)
+ * to enter the WiFi credentials from the dashboard.
+ */
 #define WIFI_AP_SSID            "AquaLeaf-Setup"
-/** Password for the captive-portal AP (min 8 chars, or "" for open) */
+/** Password for the setup AP (min 8 chars, or "" for open) */
 #define WIFI_AP_PASSWORD        "aqualeaf123"
 /** Timeout (ms) to wait for a WiFi connection before falling back to AP */
 #define WIFI_CONNECT_TIMEOUT_MS  20000UL
 /** Interval (ms) between WiFi reconnect attempts */
 #define WIFI_RECONNECT_INTERVAL_MS 30000UL
+/**
+ * mDNS / OTA hostname — the dashboard is reachable at http://<name>.local.
+ * Give every device on the same network a different name.
+ */
+#define DEVICE_HOSTNAME         "aqualeaf"
+
+// ============================================================
+//  Time (NTP) — used by the watering schedule
+// ============================================================
+/** POSIX TZ string. WIB = "WIB-7", WITA = "WITA-8", WIT = "WIT-9" */
+#define TIME_ZONE               "WIB-7"
+#define NTP_SERVER_1            "pool.ntp.org"
+#define NTP_SERVER_2            "time.google.com"
 
 // ============================================================
 //  MQTT Broker
@@ -34,8 +51,6 @@
 #define MQTT_PORT               1883
 /** Unique client ID prefix — MAC suffix is appended at runtime */
 #define MQTT_CLIENT_ID_PREFIX   "aqualeaf-"
-/** QoS level for all published messages */
-#define MQTT_QOS                1
 /** Keep-alive interval (s) */
 #define MQTT_KEEPALIVE_S        60
 /** Interval (ms) between reconnect retries */
@@ -51,11 +66,10 @@
  * broker with MQTT_USERNAME / MQTT_PASSWORD for anything sensitive.
  */
 #define MQTT_TOPIC_ROOT         "aqualeaf/"
+/** Telemetry JSON (retained) */
 #define MQTT_TOPIC_SENSOR       "sensors"
+/** "online" / "offline" (retained; "offline" is the Last Will message) */
 #define MQTT_TOPIC_STATUS       "status"
-#define MQTT_TOPIC_CMD          "cmd"
-#define MQTT_TOPIC_CONFIG       "config"
-#define MQTT_TOPIC_LWT          "lwt"
 
 // ============================================================
 //  Blynk
@@ -73,15 +87,19 @@
 #define BLYNK_VPIN_UPTIME       V5   ///< Device uptime (min)
 #define BLYNK_VPIN_RSSI         V6   ///< WiFi signal strength
 #define BLYNK_VPIN_PUMP_COUNT   V7   ///< Watering cycle counter
-#define BLYNK_VPIN_TERMINAL     V10  ///< Remote serial terminal
 
 // ============================================================
 //  Soil Moisture Sensor
 // ============================================================
-/** Raw ADC value at 0 % moisture (sensor fully dry / in air) */
+/**
+ * Default calibration: raw ADC value at 0 % (sensor in air) and 100 %
+ * (sensor in water). Can be re-calibrated from the dashboard; the
+ * calibrated values are stored in EEPROM and take precedence.
+ */
 #define MOISTURE_RAW_DRY        820
-/** Raw ADC value at 100 % moisture (sensor fully submerged) */
 #define MOISTURE_RAW_WET        380
+/** Minimum distance between the dry and wet calibration points */
+#define MOISTURE_CALIBRATION_MIN_SPAN 50
 /** Percentage below which irrigation is triggered */
 #define MOISTURE_THRESHOLD_LOW   30
 /** Percentage above which irrigation stops */
@@ -95,7 +113,7 @@
 /**
  * Plausible raw ADC range. Readings outside it are treated as a sensor
  * fault (disconnected wire, shorted probe) and automatic watering is
- * suspended. Tune together with MOISTURE_RAW_DRY / MOISTURE_RAW_WET.
+ * suspended. Calibration points must also lie inside this range.
  */
 #define MOISTURE_RAW_VALID_MIN   100
 #define MOISTURE_RAW_VALID_MAX   1000
@@ -130,29 +148,25 @@
 /** How often status/data is published to MQTT */
 #define TASK_MQTT_PUB_INTERVAL_MS 10000UL
 /** How often Blynk virtual pins are updated */
-#define TASK_BLYNK_INTERVAL_MS   3000UL
-/** How often the watchdog / health-check task runs */
-#define TASK_WATCHDOG_INTERVAL_MS 60000UL
-/** How often the Web dashboard heartbeat updates */
-#define TASK_WEB_INTERVAL_MS      1000UL
+#define TASK_BLYNK_INTERVAL_MS   10000UL
+/** How often a moisture sample is added to the history chart */
+#define HISTORY_SAMPLE_INTERVAL_MS 300000UL  // 5 min
+/** Number of history samples kept in RAM (288 × 5 min = 24 h) */
+#define HISTORY_CAPACITY         288
 
 // ============================================================
 //  Web Dashboard
 // ============================================================
 /** HTTP port for the embedded web server */
 #define WEB_SERVER_PORT          80
-/** Maximum number of simultaneous HTTP clients */
-#define WEB_MAX_CLIENTS          4
 
 // ============================================================
-//  Storage (EEPROM / LittleFS)
+//  Storage (EEPROM emulation in flash)
 // ============================================================
 /** EEPROM base address for persisted configuration */
 #define STORAGE_EEPROM_ADDR      0
 /** EEPROM size reserved for AquaLeaf config */
-#define STORAGE_EEPROM_SIZE      512
-/** Magic byte to validate EEPROM content */
-#define STORAGE_MAGIC_BYTE       0xAF
+#define STORAGE_EEPROM_SIZE      64
 
 // ============================================================
 //  Serial Logger
@@ -160,4 +174,4 @@
 /** Baud rate for the USB-serial monitor */
 #define SERIAL_BAUD_RATE         115200
 /** Minimum log level printed to serial (DEBUG=0 … FATAL=4) */
-#define LOG_LEVEL                0   // DEBUG
+#define LOG_LEVEL                1   // INFO

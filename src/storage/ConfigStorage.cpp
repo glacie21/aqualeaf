@@ -1,12 +1,11 @@
 /**
  * @file        ConfigStorage.cpp
  * @project     AquaLeaf — Intelligent Plant Irrigation Platform
- * @brief       Implementasi penyimpanan konfigurasi di EEPROM.
+ * @brief       Implementasi penyimpanan pengaturan di EEPROM.
  */
 
 #include "ConfigStorage.h"
 #include "Config.h"
-#include "Constants.h"
 #include <EEPROM.h>
 
 bool ConfigStorage::begin() {
@@ -14,40 +13,21 @@ bool ConfigStorage::begin() {
     return true;
 }
 
-WateringConfig ConfigStorage::loadWateringConfig() const {
-    WateringConfig config;
-    if (!validConfig()) {
-        config.thresholdLow = MOISTURE_THRESHOLD_LOW;
-        config.thresholdHigh = MOISTURE_THRESHOLD_HIGH;
-        config.autoMode = true;
-        config.manualOverride = false;
-        return config;
+DecodeResult ConfigStorage::load(const StoredSettings &defaults, StoredSettings &out) const {
+    uint8_t blob[SETTINGS_BLOB_SIZE];
+    for (size_t i = 0; i < SETTINGS_BLOB_SIZE; ++i) {
+        blob[i] = EEPROM.read(STORAGE_EEPROM_ADDR + i);
     }
-
-    uint16_t base = STORAGE_EEPROM_ADDR;
-    config.thresholdLow = EEPROM.read(base + 1);
-    config.thresholdHigh = EEPROM.read(base + 2);
-    config.autoMode = EEPROM.read(base + 3) == 1;
-    config.manualOverride = false;
-
-    // Data EEPROM rusak/di luar rentang -> kembali ke default.
-    if (config.thresholdHigh > 100 || config.thresholdLow >= config.thresholdHigh) {
-        config.thresholdLow = MOISTURE_THRESHOLD_LOW;
-        config.thresholdHigh = MOISTURE_THRESHOLD_HIGH;
-    }
-    return config;
+    return decodeSettings(blob, SETTINGS_BLOB_SIZE, defaults, out);
 }
 
-bool ConfigStorage::saveWateringConfig(const WateringConfig &config) {
-    uint16_t base = STORAGE_EEPROM_ADDR;
-    EEPROM.write(base, STORAGE_MAGIC_BYTE);
-    EEPROM.write(base + 1, config.thresholdLow);
-    EEPROM.write(base + 2, config.thresholdHigh);
-    EEPROM.write(base + 3, config.autoMode ? 1 : 0);
-    EEPROM.write(base + 4, config.manualOverride ? 1 : 0);
+bool ConfigStorage::save(const StoredSettings &settings) {
+    uint8_t blob[SETTINGS_BLOB_SIZE];
+    encodeSettings(settings, blob);
+    for (size_t i = 0; i < SETTINGS_BLOB_SIZE; ++i) {
+        // EEPROM.write hanya menandai dirty jika nilainya berubah, jadi commit
+        // tanpa perubahan tidak menulis ulang flash.
+        EEPROM.write(STORAGE_EEPROM_ADDR + i, blob[i]);
+    }
     return EEPROM.commit();
-}
-
-bool ConfigStorage::validConfig() const {
-    return EEPROM.read(STORAGE_EEPROM_ADDR) == STORAGE_MAGIC_BYTE;
 }

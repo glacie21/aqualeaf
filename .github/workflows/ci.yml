@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      # Secrets.h is gitignored; the template is enough to compile.
+      - name: Create Secrets.h from template
+        run: cp include/Secrets.example.h include/Secrets.h
+
+      - name: Unit tests (host)
+        run: pio test -e native
+
+      - name: Build firmware
+        run: pio run -e nodemcu_v2
+
+      - name: Build dashboard filesystem image
+        run: pio run -e nodemcu_v2 -t buildfs
+
+      - name: Compile on-device tests
+        run: pio test -e nodemcu_v2 --without-uploading --without-testing

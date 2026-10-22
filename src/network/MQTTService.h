@@ -17,6 +17,7 @@ public:
                 uint16_t port,
                 const char *clientIdPrefix,
                 const char *topicRoot,
+                const char *statusTopicSuffix,
                 const char *username,
                 const char *password,
                 uint16_t keepalive,
@@ -37,6 +38,7 @@ private:
     uint16_t port;
     const char *clientIdPrefix;
     const char *topicRoot;
+    const char *statusTopicSuffix;
     String deviceId;
     String topicBase;
     const char *username;

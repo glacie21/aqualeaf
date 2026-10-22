@@ -18,33 +18,59 @@ void Logger::begin() {
     info("Logger initialized");
 }
 
-void Logger::debug(const String &message) {
+bool Logger::isEnabled(uint8_t level) const {
+    return level >= minLevel;
+}
+
+void Logger::debug(const char *message) {
     log(LOG_DEBUG, message);
 }
 
-void Logger::info(const String &message) {
+void Logger::debug(const String &message) {
+    log(LOG_DEBUG, message.c_str());
+}
+
+void Logger::info(const char *message) {
     log(LOG_INFO, message);
 }
 
-void Logger::warn(const String &message) {
+void Logger::info(const String &message) {
+    log(LOG_INFO, message.c_str());
+}
+
+void Logger::warn(const char *message) {
     log(LOG_WARNING, message);
 }
 
-void Logger::error(const String &message) {
+void Logger::warn(const String &message) {
+    log(LOG_WARNING, message.c_str());
+}
+
+void Logger::error(const char *message) {
     log(LOG_ERROR, message);
 }
 
-void Logger::fatal(const String &message) {
+void Logger::error(const String &message) {
+    log(LOG_ERROR, message.c_str());
+}
+
+void Logger::fatal(const char *message) {
     log(LOG_FATAL, message);
 }
 
-void Logger::log(uint8_t level, const String &message) {
-    if (level < minLevel) {
+void Logger::fatal(const String &message) {
+    log(LOG_FATAL, message.c_str());
+}
+
+void Logger::log(uint8_t level, const char *message) {
+    if (!isEnabled(level)) {
         return;
     }
 
-    const char *tags[] = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-    String output = String("[") + tags[level] + "] ";
-    output += message;
-    Serial.println(output);
+    static const char *const tags[] = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+    const char *tag = level <= LOG_FATAL ? tags[level] : "?";
+    Serial.print('[');
+    Serial.print(tag);
+    Serial.print("] ");
+    Serial.println(message);
 }

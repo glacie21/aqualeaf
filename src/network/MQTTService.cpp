@@ -12,6 +12,7 @@ MQTTService::MQTTService(const char *host,
                          uint16_t port,
                          const char *clientIdPrefix,
                          const char *topicRoot,
+                         const char *statusTopicSuffix,
                          const char *username,
                          const char *password,
                          uint16_t keepalive,
@@ -21,6 +22,7 @@ MQTTService::MQTTService(const char *host,
       port(port),
       clientIdPrefix(clientIdPrefix),
       topicRoot(topicRoot),
+      statusTopicSuffix(statusTopicSuffix),
       username(username),
       password(password),
       keepalive(keepalive),
@@ -77,9 +79,14 @@ void MQTTService::reconnect() {
     }
 
     String clientId = String(clientIdPrefix) + deviceId;
-    if (username && username[0] != '\0') {
-        client.connect(clientId.c_str(), username, password);
-    } else {
-        client.connect(clientId.c_str());
+    bool hasCredentials = username && username[0] != '\0';
+    // Last Will: broker mempublikasikan "offline" (retained) jika koneksi putus tanpa disconnect.
+    String statusTopic = topicBase + statusTopicSuffix;
+    bool ok = client.connect(clientId.c_str(),
+                             hasCredentials ? username : nullptr,
+                             hasCredentials ? password : nullptr,
+                             statusTopic.c_str(), 0, true, "offline");
+    if (ok) {
+        client.publish(statusTopic.c_str(), "online", true);
     }
 }

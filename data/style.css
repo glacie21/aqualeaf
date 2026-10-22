@@ -10,6 +10,9 @@
     --accent-soft: rgba(77, 200, 155, 0.14);
     --shadow: rgba(17, 53, 48, 0.12);
     --danger: #d26969;
+    /* Chart marks — validated pair (CVD ΔE 17.2 against the panel surface) */
+    --chart-moisture: #2ea77b;
+    --chart-pump: #3b7fc4;
 }
 
 * {
@@ -217,6 +220,9 @@ h1 {
 
 .control-row {
     display: grid;
+    /* Override space-between from the shared rule above; on a grid it would
+       shrink the column to its content and leave sliders ~130px wide. */
+    justify-content: stretch;
     gap: 10px;
 }
 
@@ -330,6 +336,312 @@ button:hover {
     transform: translateX(26px);
 }
 
+/* ── Panels ─────────────────────────────────────────────── */
+
+.panel {
+    position: relative;
+    margin-top: 22px;
+    padding: 20px 20px 16px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    box-shadow: 0 12px 26px var(--shadow);
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 22px;
+}
+
+.panel-grid .panel {
+    margin-top: 22px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+}
+
+.text-button {
+    padding: 6px 10px;
+    background: none;
+    color: var(--accent-strong);
+    font-size: 0.85rem;
+}
+
+.text-button:hover {
+    box-shadow: none;
+    text-decoration: underline;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.button-row .secondary-button {
+    width: auto;
+    margin-top: 0;
+}
+
+.inline-message {
+    margin: 12px 0 0;
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.inline-message.error {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+/* ── Readouts & forms ───────────────────────────────────── */
+
+.readout {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0 0;
+}
+
+.readout div {
+    padding: 10px 12px;
+    background: var(--panel-soft);
+    border-radius: 14px;
+}
+
+.readout dt {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.readout dd {
+    margin: 4px 0 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.wifi-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.wifi-form input {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: white;
+    color: var(--text);
+    font: inherit;
+}
+
+.wifi-form input:focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: 1px;
+}
+
+/* ── Watering hours ─────────────────────────────────────── */
+
+.hour-chips {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.hour-chip {
+    padding: 8px 0;
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.hour-chip[aria-pressed="true"] {
+    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+    border-color: transparent;
+    color: white;
+}
+
+.hour-chip:hover {
+    box-shadow: none;
+}
+
+/* ── History chart ──────────────────────────────────────── */
+
+.chart-key {
+    display: flex;
+    gap: 16px;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.chart-key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chart-key i {
+    display: inline-block;
+}
+
+.key-threshold {
+    width: 14px;
+    height: 1px;
+    background: var(--muted);
+}
+
+.key-pump {
+    width: 4px;
+    height: 10px;
+    border-radius: 1px;
+    background: var(--chart-pump);
+}
+
+.chart {
+    position: relative;
+    margin-top: 14px;
+    border-radius: 12px;
+}
+
+.chart:focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: 4px;
+}
+
+.chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.chart-empty {
+    margin: 0;
+    padding: 48px 0;
+    color: var(--muted);
+    text-align: center;
+}
+
+.chart .grid-line {
+    stroke: var(--line);
+    stroke-width: 1;
+}
+
+.chart .threshold-line {
+    stroke: var(--muted);
+    stroke-width: 1;
+    opacity: 0.55;
+}
+
+.chart .axis-label {
+    fill: var(--muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart .series-line {
+    fill: none;
+    stroke: var(--chart-moisture);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.chart .series-area {
+    fill: var(--chart-moisture);
+    opacity: 0.1;
+}
+
+.chart .pump-mark {
+    fill: var(--chart-pump);
+}
+
+.chart .crosshair {
+    stroke: var(--muted);
+    stroke-width: 1;
+}
+
+.chart .focus-dot {
+    fill: var(--chart-moisture);
+    stroke: var(--panel);
+    stroke-width: 2;
+}
+
+.chart-tooltip {
+    position: absolute;
+    z-index: 2;
+    min-width: 120px;
+    padding: 8px 10px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 18px var(--shadow);
+    color: var(--text);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.chart-tooltip strong {
+    display: block;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-tooltip span {
+    color: var(--muted);
+}
+
+.data-table {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.data-table summary {
+    cursor: pointer;
+}
+
+.table-scroll {
+    max-height: 260px;
+    margin-top: 8px;
+    overflow-y: auto;
+}
+
+.data-table table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+}
+
 @media (max-width: 720px) {
     .topbar,
     .toggle-row,
@@ -338,7 +650,16 @@ button:hover {
         align-items: flex-start;
     }
 
-    .status-card {
+    .status-card,
+    .panel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hour-chips {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .readout {
         grid-template-columns: 1fr;
     }
 

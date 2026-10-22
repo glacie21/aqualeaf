@@ -1,7 +1,7 @@
 /**
  * @file        PumpController.h
  * @project     AquaLeaf — Intelligent Plant Irrigation Platform
- * @brief       Kontrol pompa dengan timeout safety, cooldown, dan batas harian.
+ * @brief       Kontrol pompa: menghubungkan PumpStateMachine dengan relay fisik.
  */
 
 #pragma once
@@ -9,6 +9,7 @@
 #include <Arduino.h>
 #include "RelayModule.h"
 #include "Constants.h"
+#include "logic/PumpStateMachine.h"
 
 class PumpController {
 public:
@@ -32,18 +33,8 @@ public:
     bool isDailyLimitReached() const;
 
 private:
-    void switchOff(uint32_t now, PumpState nextState);
-    void rollDailyWindow(uint32_t now);
+    void applyRelay();
 
     RelayModule relay;
-    PumpState state;
-    uint32_t maxOnMs;
-    uint32_t cooldownMs;
-    uint32_t debounceMs;
-    uint32_t dailyLimitMs;
-    uint32_t lastChangeMs;
-    uint32_t activationMs;
-    uint32_t cycleCount;
-    uint32_t windowStartMs;
-    uint32_t windowOnMs;
+    PumpStateMachine machine;
 };

@@ -31,7 +31,7 @@
                 <article class="metric-card pump">
                     <span class="metric-label">Pump State</span>
                     <strong id="pumpState">--</strong>
-                    <small>Watering flow status</small>
+                    <small id="pumpHint">Watering flow status</small>
                 </article>
                 <article class="metric-card mode">
                     <span class="metric-label">Mode</span>
@@ -40,11 +40,40 @@
                 </article>
             </section>
 
+            <section class="panel" aria-labelledby="historyTitle">
+                <div class="panel-header">
+                    <div>
+                        <h2 id="historyTitle" class="panel-title">Soil moisture, last 24 hours</h2>
+                        <p class="helper-text">Sampled every 5 minutes. Hover or use the arrow keys to read values.</p>
+                    </div>
+                    <div class="chart-key" aria-hidden="true">
+                        <span><i class="key-threshold"></i>Thresholds</span>
+                        <span><i class="key-pump"></i>Pump ran</span>
+                    </div>
+                </div>
+                <div id="historyChart" class="chart" tabindex="0" role="img"
+                     aria-label="Soil moisture over the last 24 hours">
+                    <p class="chart-empty">Collecting data — the first sample appears shortly after boot.</p>
+                </div>
+                <div id="chartTooltip" class="chart-tooltip" hidden></div>
+                <details id="historyDetails" class="data-table">
+                    <summary>Show data table</summary>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr><th scope="col">Time</th><th scope="col">Moisture</th><th scope="col">Pump ran</th></tr>
+                            </thead>
+                            <tbody id="historyTable"></tbody>
+                        </table>
+                    </div>
+                </details>
+            </section>
+
             <section class="controls-panel" aria-label="Controls panel">
                 <div class="control-row primary-row">
                     <div>
                         <label class="field-label">Manual Pump</label>
-                        <p class="helper-text">Turn watering on or off instantly.</p>
+                        <p class="helper-text">Turn watering on or off instantly. Automatic mode resumes after 30 minutes.</p>
                     </div>
                     <button id="pumpButton" class="primary-button">Toggle Pump</button>
                 </div>
@@ -76,8 +105,53 @@
                     </label>
                 </div>
 
+                <div class="control-row">
+                    <div class="slider-header">
+                        <span class="field-label" id="hoursLabel">Watering Hours</span>
+                        <button id="allHours" type="button" class="text-button">Select all</button>
+                    </div>
+                    <p class="helper-text" id="clockHint">Automatic watering only starts during the selected hours.</p>
+                    <div id="hourChips" class="hour-chips" role="group" aria-labelledby="hoursLabel"></div>
+                </div>
+
+                <p id="configMessage" class="inline-message" hidden></p>
                 <button id="saveConfig" class="secondary-button">Save Configuration</button>
             </section>
+
+            <div class="panel-grid">
+                <section class="panel" aria-labelledby="calibrationTitle">
+                    <h2 id="calibrationTitle" class="panel-title">Sensor calibration</h2>
+                    <p class="helper-text">Hold the sensor in the air and press “Set dry”, then put it in a glass of water and press “Set wet”.</p>
+                    <dl class="readout">
+                        <div><dt>Raw now</dt><dd id="rawNow">--</dd></div>
+                        <div><dt>Dry (0 %)</dt><dd id="rawDry">--</dd></div>
+                        <div><dt>Wet (100 %)</dt><dd id="rawWet">--</dd></div>
+                    </dl>
+                    <div class="button-row">
+                        <button id="calibrateDry" type="button" class="secondary-button">Set dry</button>
+                        <button id="calibrateWet" type="button" class="secondary-button">Set wet</button>
+                        <button id="calibrateReset" type="button" class="text-button">Reset to defaults</button>
+                    </div>
+                    <p id="calibrationMessage" class="inline-message" hidden></p>
+                </section>
+
+                <section class="panel" aria-labelledby="networkTitle">
+                    <h2 id="networkTitle" class="panel-title">Network</h2>
+                    <dl class="readout">
+                        <div><dt>WiFi</dt><dd id="wifiSsid">--</dd></div>
+                        <div><dt>Address</dt><dd id="wifiAddress">--</dd></div>
+                        <div><dt>Firmware</dt><dd id="firmware">--</dd></div>
+                    </dl>
+                    <form id="wifiForm" class="wifi-form">
+                        <label class="field-label" for="wifiSsidInput">New network name (SSID)</label>
+                        <input id="wifiSsidInput" type="text" maxlength="32" autocomplete="off" required />
+                        <label class="field-label" for="wifiPasswordInput">Password</label>
+                        <input id="wifiPasswordInput" type="password" maxlength="63" autocomplete="new-password" />
+                        <button type="submit" class="secondary-button">Connect</button>
+                    </form>
+                    <p id="wifiMessage" class="inline-message" hidden></p>
+                </section>
+            </div>
         </main>
     </div>
     <script src="/app.js"></script>

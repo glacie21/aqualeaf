@@ -5,6 +5,7 @@
  */
 
 #include "SoilMoistureSensor.h"
+#include "logic/MoistureMath.h"
 #include <Arduino.h>
 
 SoilMoistureSensor::SoilMoistureSensor(uint8_t analogPin,
@@ -15,8 +16,7 @@ SoilMoistureSensor::SoilMoistureSensor(uint8_t analogPin,
                                        uint16_t rawValidMin,
                                        uint16_t rawValidMax)
     : pin(analogPin),
-      rawDry(rawDry),
-      rawWet(rawWet),
+      calibration{rawDry, rawWet},
       samples(samples),
       sampleDelayMs(sampleDelayMs),
       rawValidMin(rawValidMin),
@@ -37,7 +37,7 @@ float SoilMoistureSensor::read() {
     }
 
     lastRaw = static_cast<uint16_t>(total / samples);
-    lastPercentage = convertRawToPercentage(lastRaw);
+    lastPercentage = rawToMoisturePercent(lastRaw, calibration.rawDry, calibration.rawWet);
     return lastPercentage;
 }
 
@@ -46,22 +46,17 @@ float SoilMoistureSensor::getLastPercentage() const {
 }
 
 bool SoilMoistureSensor::isLastReadingValid() const {
-    return lastRaw >= rawValidMin && lastRaw <= rawValidMax;
+    return isRawInRange(lastRaw, rawValidMin, rawValidMax);
 }
 
 uint16_t SoilMoistureSensor::getLastRaw() const {
     return lastRaw;
 }
 
-float SoilMoistureSensor::convertRawToPercentage(uint16_t rawValue) const {
-    if (rawValue >= rawDry) {
-        return 0.0f;
-    }
-    if (rawValue <= rawWet) {
-        return 100.0f;
-    }
+void SoilMoistureSensor::setCalibration(const SensorCalibration &calibration) {
+    this->calibration = calibration;
+}
 
-    float normalized = static_cast<float>(rawDry - rawValue) / static_cast<float>(rawDry - rawWet);
-    normalized = max(0.0f, min(1.0f, normalized));
-    return normalized * 100.0f;
+SensorCalibration SoilMoistureSensor::getCalibration() const {
+    return calibration;
 }

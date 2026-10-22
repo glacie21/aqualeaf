@@ -1,3 +1,5 @@
+// Smoke test hardware: membaca ADC sungguhan. Logika konversi dan validasi
+// dites secara deterministik di test/test_native_rules (pio test -e native).
 #include <Arduino.h>
 #include <unity.h>
 #include "sensors/SoilMoistureSensor.h"
@@ -9,25 +11,7 @@ void test_sensor_reading_in_range(void) {
     float pct = sensor.read();
     TEST_ASSERT_TRUE(pct >= 0.0f && pct <= 100.0f);
     TEST_ASSERT_EQUAL_FLOAT(pct, sensor.getLastPercentage());
-}
-
-void test_sensor_linear_conversion(void) {
-    SoilMoistureSensor sensor(PIN_MOISTURE_SENSOR, 1023, 0, 5, 1);
-    float pct = sensor.read();
-    float expected = (1023.0f - sensor.getLastRaw()) / 1023.0f * 100.0f;
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, expected, pct);
-}
-
-void test_sensor_clamps_dry(void) {
-    // Setiap nilai raw >= rawDry dianggap kering total.
-    SoilMoistureSensor sensor(PIN_MOISTURE_SENSOR, 0, 0, 1, 1);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, sensor.read());
-}
-
-void test_sensor_clamps_wet(void) {
-    // Setiap nilai raw <= rawWet dianggap basah total.
-    SoilMoistureSensor sensor(PIN_MOISTURE_SENSOR, 1024, 1023, 1, 1);
-    TEST_ASSERT_EQUAL_FLOAT(100.0f, sensor.read());
+    TEST_ASSERT_TRUE(sensor.getLastRaw() <= 1023);
 }
 
 void test_sensor_valid_range(void) {
@@ -36,20 +20,28 @@ void test_sensor_valid_range(void) {
     wide.read();
     TEST_ASSERT_TRUE(wide.isLastReadingValid());
 
-    // Rentang di atas ADC_MAX_RAW tidak mungkin tercapai: selalu fault.
+    // Rentang di atas nilai ADC maksimum tidak mungkin tercapai: selalu fault.
     SoilMoistureSensor impossible(PIN_MOISTURE_SENSOR, 1023, 0, 1, 1, 1024, 1024);
     impossible.read();
     TEST_ASSERT_FALSE(impossible.isLastReadingValid());
+}
+
+void test_sensor_calibration_is_applied(void) {
+    SoilMoistureSensor sensor(PIN_MOISTURE_SENSOR, 1023, 0, 1, 1);
+    SensorCalibration calibration;
+    calibration.rawDry = 820;
+    calibration.rawWet = 380;
+    sensor.setCalibration(calibration);
+    TEST_ASSERT_EQUAL_UINT16(820, sensor.getCalibration().rawDry);
+    TEST_ASSERT_EQUAL_UINT16(380, sensor.getCalibration().rawWet);
 }
 
 void setup() {
     delay(100);
     UNITY_BEGIN();
     RUN_TEST(test_sensor_reading_in_range);
-    RUN_TEST(test_sensor_linear_conversion);
-    RUN_TEST(test_sensor_clamps_dry);
-    RUN_TEST(test_sensor_clamps_wet);
     RUN_TEST(test_sensor_valid_range);
+    RUN_TEST(test_sensor_calibration_is_applied);
     UNITY_END();
 }
 

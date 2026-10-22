@@ -17,7 +17,11 @@
 #pragma once
 
 // ============================================================
-//  WiFi Credentials
+//  WiFi Credentials (optional)
+//  Only used on first boot when the device has no saved network.
+//  Leave the placeholder to set up WiFi from the dashboard instead:
+//  join the "AquaLeaf-Setup" access point and open http://192.168.4.1.
+//  Later changes are made from the dashboard (Network panel).
 // ============================================================
 #define WIFI_SSID        "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD    "YOUR_WIFI_PASSWORD"
@@ -39,6 +43,8 @@
 
 // ============================================================
 //  OTA (Over-The-Air Update) Password
+//  Required to flash firmware over WiFi (env:nodemcu_v2_ota).
+//  Change it — anyone on your network who knows it can flash the device.
 // ============================================================
 #define OTA_PASSWORD     "aqualeaf_ota_2025"
 
