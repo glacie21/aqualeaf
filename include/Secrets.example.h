@@ -32,7 +32,10 @@
 //  Blynk Auth Token
 // ============================================================
 // Get your token at: https://blynk.cloud → Templates → Device Info
-#define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN_HERE"
+// Leave the placeholder token to disable Blynk entirely.
+#define BLYNK_TEMPLATE_ID   "YOUR_TEMPLATE_ID"
+#define BLYNK_TEMPLATE_NAME "AquaLeaf"
+#define BLYNK_AUTH_TOKEN    "YOUR_BLYNK_AUTH_TOKEN_HERE"
 
 // ============================================================
 //  OTA (Over-The-Air Update) Password
@@ -40,7 +43,8 @@
 #define OTA_PASSWORD     "aqualeaf_ota_2025"
 
 // ============================================================
-//  Web Dashboard Basic Auth (optional)
+//  Web Dashboard Basic Auth (required for dashboard & REST API)
+//  Change these defaults before deploying!
 // ============================================================
 #define WEB_ADMIN_USER   "admin"
 #define WEB_ADMIN_PASS   "aqualeaf"

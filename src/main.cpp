@@ -13,6 +13,9 @@
 #include "Secrets.h"
 #include "core/SystemManager.h"
 
+// Unit test menyediakan setup()/loop() sendiri.
+#ifndef PIO_UNIT_TESTING
+
 SystemManager systemManager;
 
 void setup() {
@@ -22,3 +25,5 @@ void setup() {
 void loop() {
     systemManager.update();
 }
+
+#endif

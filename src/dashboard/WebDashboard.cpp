@@ -7,7 +7,8 @@
 #include "WebDashboard.h"
 #include "../core/SystemManager.h"
 #include "Config.h"
-#include <FS.h>
+#include "Secrets.h"
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 
 WebDashboard::WebDashboard(uint16_t port)
@@ -19,7 +20,7 @@ void WebDashboard::setManager(SystemManager *manager) {
 }
 
 void WebDashboard::begin() {
-    SPIFFS.begin();
+    LittleFS.begin();
     registerRoutes();
     server.begin();
 }
@@ -29,14 +30,22 @@ void WebDashboard::handleClient() {
 }
 
 void WebDashboard::registerRoutes() {
-    server.on("/", HTTP_GET, [this]() { handleRoot(); });
-    server.on("/style.css", HTTP_GET, [this]() { handleStaticFile("/style.css"); });
-    server.on("/app.js", HTTP_GET, [this]() { handleStaticFile("/app.js"); });
-    server.on("/api/status", HTTP_GET, [this]() { handleApiStatus(); });
-    server.on("/api/pump", HTTP_POST, [this]() { handleApiPump(); });
-    server.on("/api/config", HTTP_POST, [this]() { handleApiConfig(); });
+    server.on("/", HTTP_GET, [this]() { if (authorize()) handleRoot(); });
+    server.on("/style.css", HTTP_GET, [this]() { if (authorize()) handleStaticFile("/style.css"); });
+    server.on("/app.js", HTTP_GET, [this]() { if (authorize()) handleStaticFile("/app.js"); });
+    server.on("/api/status", HTTP_GET, [this]() { if (authorize()) handleApiStatus(); });
+    server.on("/api/pump", HTTP_POST, [this]() { if (authorize()) handleApiPump(); });
+    server.on("/api/config", HTTP_POST, [this]() { if (authorize()) handleApiConfig(); });
     server.on("/api/health", HTTP_GET, [this]() { handleApiHealth(); });
     server.onNotFound([this]() { handleNotFound(); });
+}
+
+bool WebDashboard::authorize() {
+    if (server.authenticate(WEB_ADMIN_USER, WEB_ADMIN_PASS)) {
+        return true;
+    }
+    server.requestAuthentication(BASIC_AUTH, "AquaLeaf");
+    return false;
 }
 
 void WebDashboard::handleRoot() {
@@ -53,12 +62,12 @@ void WebDashboard::handleStaticFile(const String &path) {
         contentType = "application/javascript";
     }
 
-    if (!SPIFFS.exists(path)) {
+    if (!LittleFS.exists(path)) {
         server.send(404, "text/plain", "File not found");
         return;
     }
 
-    File file = SPIFFS.open(path, "r");
+    File file = LittleFS.open(path, "r");
     if (!file) {
         server.send(500, "text/plain", "Unable to open file");
         return;
@@ -87,7 +96,7 @@ void WebDashboard::handleApiPump() {
     }
 
     String body = server.arg("plain");
-    DynamicJsonDocument json(256);
+    JsonDocument json;
     DeserializationError error = deserializeJson(json, body);
     if (error) {
         server.send(400, "application/json", "{\"error\":\"invalid JSON\"}");
@@ -106,7 +115,7 @@ void WebDashboard::handleApiConfig() {
     }
 
     String body = server.arg("plain");
-    DynamicJsonDocument json(256);
+    JsonDocument json;
     DeserializationError error = deserializeJson(json, body);
     if (error) {
         server.send(400, "application/json", "{\"error\":\"invalid JSON\"}");

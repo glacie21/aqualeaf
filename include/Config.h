@@ -116,7 +116,7 @@
 #define WEB_MAX_CLIENTS          4
 
 // ============================================================
-//  Storage (EEPROM / SPIFFS)
+//  Storage (EEPROM / LittleFS)
 // ============================================================
 /** EEPROM base address for persisted configuration */
 #define STORAGE_EEPROM_ADDR      0

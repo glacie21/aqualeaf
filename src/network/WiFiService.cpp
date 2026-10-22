@@ -1,7 +1,7 @@
 /**
  * @file        WiFiService.cpp
  * @project     AquaLeaf — Intelligent Plant Irrigation Platform
- * @brief       Implementasi koneksi WiFi dengan retry otomatis.
+ * @brief       Implementasi koneksi WiFi non-blocking dengan retry otomatis.
  */
 
 #include "WiFiService.h"
@@ -13,7 +13,8 @@ WiFiService::WiFiService(uint32_t connectTimeoutMs, uint32_t reconnectIntervalMs
     : connectTimeoutMs(connectTimeoutMs),
       reconnectIntervalMs(reconnectIntervalMs),
       lastAttemptMs(0),
-      status(NetworkStatus::DISCONNECTED) {
+      status(NetworkStatus::DISCONNECTED),
+      apActive(false) {
 }
 
 void WiFiService::begin() {
@@ -24,10 +25,30 @@ void WiFiService::begin() {
 }
 
 void WiFiService::update() {
-    if (isConnected()) {
+    uint32_t now = millis();
+
+    if (WiFi.status() == WL_CONNECTED) {
+        if (status != NetworkStatus::CONNECTED) {
+            status = NetworkStatus::CONNECTED;
+            stopAccessPoint();
+        }
         return;
     }
-    uint32_t now = millis();
+
+    if (status == NetworkStatus::CONNECTED) {
+        // Koneksi baru saja putus; beri waktu auto-reconnect bawaan SDK.
+        status = NetworkStatus::DISCONNECTED;
+        lastAttemptMs = now;
+        return;
+    }
+
+    if (status == NetworkStatus::CONNECTING) {
+        if (now - lastAttemptMs >= connectTimeoutMs) {
+            startAccessPoint();
+        }
+        return;
+    }
+
     if (now - lastAttemptMs >= reconnectIntervalMs) {
         connect();
     }
@@ -37,17 +58,23 @@ void WiFiService::connect() {
     status = NetworkStatus::CONNECTING;
     lastAttemptMs = millis();
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+}
 
-    uint32_t start = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - start < connectTimeoutMs) {
-        delay(200);
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-        status = NetworkStatus::CONNECTED;
-    } else {
+void WiFiService::startAccessPoint() {
+    if (!apActive) {
+        WiFi.mode(WIFI_AP_STA);
         WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSWORD);
-        status = NetworkStatus::AP_MODE;
+        apActive = true;
+    }
+    status = NetworkStatus::AP_MODE;
+    lastAttemptMs = millis();
+}
+
+void WiFiService::stopAccessPoint() {
+    if (apActive) {
+        WiFi.softAPdisconnect(true);
+        WiFi.mode(WIFI_STA);
+        apActive = false;
     }
 }
 

@@ -65,9 +65,10 @@ bool PumpController::activate() {
 }
 
 bool PumpController::deactivate() {
-    if (!relay.isOn() && state != PumpState::ON) {
-        state = PumpState::OFF;
-        return true;
+    if (state != PumpState::ON) {
+        // Sudah mati; jangan reset COOLDOWN/FAULT agar lockout tetap berlaku.
+        relay.setOn(false);
+        return false;
     }
     relay.setOn(false);
     state = PumpState::COOLDOWN;

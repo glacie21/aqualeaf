@@ -20,6 +20,7 @@ public:
 
 private:
     void registerRoutes();
+    bool authorize();
     void handleRoot();
     void handleStaticFile(const String &path);
     void handleNotFound();

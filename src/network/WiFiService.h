@@ -19,8 +19,11 @@ public:
 
 private:
     void connect();
+    void startAccessPoint();
+    void stopAccessPoint();
     uint32_t connectTimeoutMs;
     uint32_t reconnectIntervalMs;
     uint32_t lastAttemptMs;
     NetworkStatus status;
+    bool apActive;
 };

@@ -96,6 +96,17 @@ h1 {
     box-shadow: 0 0 0 5px rgba(77, 200, 155, 0.18);
 }
 
+.status-pill.offline {
+    background: rgba(210, 105, 105, 0.1);
+    border-color: rgba(210, 105, 105, 0.2);
+    color: var(--danger);
+}
+
+.status-pill.offline::before {
+    background: var(--danger);
+    box-shadow: 0 0 0 5px rgba(210, 105, 105, 0.18);
+}
+
 .dashboard {
     margin-top: 26px;
 }

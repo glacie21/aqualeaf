@@ -14,8 +14,9 @@ RelayModule::RelayModule(uint8_t pin, uint8_t activeState, uint8_t idleState)
 }
 
 void RelayModule::begin() {
-    pinMode(pin, OUTPUT);
+    // Set level idle sebelum pin menjadi output agar relay tidak sempat aktif saat boot.
     digitalWrite(pin, idleState);
+    pinMode(pin, OUTPUT);
     currentState = false;
 }
 
