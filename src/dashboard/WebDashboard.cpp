@@ -21,6 +21,9 @@ void WebDashboard::setManager(SystemManager *manager) {
 
 void WebDashboard::begin() {
     LittleFS.begin();
+    // Secara default ESP8266WebServer hanya menyimpan header Authorization; Content-Type
+    // perlu didaftarkan agar bisa dicek di requireJsonBody().
+    server.collectHeaders("Content-Type");
     registerRoutes();
     server.begin();
 }
@@ -34,8 +37,8 @@ void WebDashboard::registerRoutes() {
     server.on("/style.css", HTTP_GET, [this]() { if (authorize()) handleStaticFile("/style.css"); });
     server.on("/app.js", HTTP_GET, [this]() { if (authorize()) handleStaticFile("/app.js"); });
     server.on("/api/status", HTTP_GET, [this]() { if (authorize()) handleApiStatus(); });
-    server.on("/api/pump", HTTP_POST, [this]() { if (authorize()) handleApiPump(); });
-    server.on("/api/config", HTTP_POST, [this]() { if (authorize()) handleApiConfig(); });
+    server.on("/api/pump", HTTP_POST, [this]() { if (authorize() && requireJsonBody()) handleApiPump(); });
+    server.on("/api/config", HTTP_POST, [this]() { if (authorize() && requireJsonBody()) handleApiConfig(); });
     server.on("/api/health", HTTP_GET, [this]() { handleApiHealth(); });
     server.onNotFound([this]() { handleNotFound(); });
 }
@@ -45,6 +48,20 @@ bool WebDashboard::authorize() {
         return true;
     }
     server.requestAuthentication(BASIC_AUTH, "AquaLeaf");
+    return false;
+}
+
+bool WebDashboard::requireJsonBody() {
+    // Proteksi CSRF: form HTML lintas-situs hanya bisa mengirim text/plain, urlencoded,
+    // atau multipart tanpa preflight, dan browser tetap menyertakan kredensial Basic Auth
+    // yang tersimpan. Mewajibkan application/json memaksa preflight CORS, yang tidak
+    // dijawab server ini, sehingga request lintas-situs tidak pernah terkirim.
+    String contentType = server.header("Content-Type");
+    contentType.toLowerCase();
+    if (contentType.startsWith("application/json")) {
+        return true;
+    }
+    server.send(415, "application/json", "{\"error\":\"Content-Type must be application/json\"}");
     return false;
 }
 

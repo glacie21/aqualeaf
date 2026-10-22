@@ -41,6 +41,19 @@ Returns current sensor and system state as JSON.
 - `daily_limit_reached` / `pump_on_today_s`: total waktu nyala pompa pada jendela
   24 jam berjalan, dibatasi `PUMP_DAILY_LIMIT_MS` (berlaku juga untuk kontrol manual)
 - `override_remaining_s`: sisa waktu override manual sebelum mode kembali otomatis
+- `weak_web_password`: `WEB_ADMIN_PASS` masih default atau kurang dari 8 karakter
+
+## Endpoint POST
+
+`POST /api/pump` dan `POST /api/config` wajib memakai header
+`Content-Type: application/json`; selain itu server membalas `415`. Ini
+mencegah CSRF: form HTML dari situs lain tidak bisa mengirim JSON tanpa
+preflight CORS, dan server tidak menjawab preflight tersebut.
+
+```bash
+curl -u admin:PASSWORD -H "Content-Type: application/json" \
+     -d '{"pump_on":true}' http://<ip-perangkat>/api/pump
+```
 
 ## POST /api/pump
 
@@ -80,3 +93,23 @@ status terbaru.
 ## GET /api/health
 
 Returns plain text `OK`. Tidak memerlukan autentikasi.
+
+## MQTT
+
+Telemetry dipublikasikan (retained) setiap `TASK_MQTT_PUB_INTERVAL_MS` ke
+topic unik per perangkat:
+
+```
+aqualeaf/<device-id>/sensors
+```
+
+`<device-id>` adalah MAC address huruf kecil tanpa `:` (mis. `a4cf12b3c4d5`).
+Base topic lengkap tercetak di Serial Monitor saat boot (`MQTT base topic: ...`).
+Payload berisi data sensor, status pompa, threshold, flag safety
+(`sensor_fault`, `watering_lockout`, `daily_limit_reached`), `uptime_ms`,
+`wifi_connected`, dan `mqtt_connected`.
+
+Topic unik hanya mencegah data antar-perangkat tercampur. Di broker publik
+(default `broker.hivemq.com`, tanpa TLS) siapa pun yang subscribe ke
+`aqualeaf/#` tetap bisa membacanya; gunakan broker pribadi dengan
+`MQTT_USERNAME` / `MQTT_PASSWORD` untuk data yang tidak boleh terbuka.

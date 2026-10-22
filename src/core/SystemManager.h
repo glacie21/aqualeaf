@@ -36,6 +36,7 @@ public:
 private:
     void initializeHardware();
     void initializeServices();
+    void warnInsecureDefaults();
     void processSensorCycle();
     void runAutomaticWatering();
     void startAutomaticCycle(float moisture);
@@ -61,6 +62,7 @@ private:
     uint32_t lastDashboardMs;
     uint32_t manualOverrideMs;
     bool blynkEnabled;
+    bool weakWebPassword;
     bool sensorFault;
     bool wateringLockout;
     uint8_t ineffectiveCycles;

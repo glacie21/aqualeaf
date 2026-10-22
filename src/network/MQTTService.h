@@ -16,6 +16,7 @@ public:
     MQTTService(const char *host,
                 uint16_t port,
                 const char *clientIdPrefix,
+                const char *topicRoot,
                 const char *username,
                 const char *password,
                 uint16_t keepalive,
@@ -23,7 +24,10 @@ public:
     void begin();
     void update();
     bool connected();
-    bool publish(const char *topic, const String &payload);
+    /** Publish ke <topicRoot><deviceId>/<topicSuffix>. */
+    bool publish(const char *topicSuffix, const String &payload);
+    /** Base topic unik perangkat, mis. "aqualeaf/a4cf12b3c4d5/". */
+    const String &getTopicBase() const;
 
 private:
     void reconnect();
@@ -32,6 +36,9 @@ private:
     const char *host;
     uint16_t port;
     const char *clientIdPrefix;
+    const char *topicRoot;
+    String deviceId;
+    String topicBase;
     const char *username;
     const char *password;
     uint16_t keepalive;

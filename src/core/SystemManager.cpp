@@ -14,6 +14,11 @@
 
 static SystemManager *s_instance = nullptr;
 
+// Password dianggap lemah jika masih nilai default dari repo publik atau < 8 karakter.
+static bool isWeakSecret(const char *value, const char *knownDefault) {
+    return strlen(value) < 8 || strcmp(value, knownDefault) == 0;
+}
+
 SystemManager::SystemManager()
     : sensor(PIN_MOISTURE_SENSOR,
              MOISTURE_RAW_DRY,
@@ -34,6 +39,7 @@ SystemManager::SystemManager()
       mqtt(MQTT_BROKER,
            MQTT_PORT,
            MQTT_CLIENT_ID_PREFIX,
+           MQTT_TOPIC_ROOT,
            MQTT_USERNAME,
            MQTT_PASSWORD,
            MQTT_KEEPALIVE_S,
@@ -45,6 +51,7 @@ SystemManager::SystemManager()
       lastDashboardMs(0),
       manualOverrideMs(0),
       blynkEnabled(false),
+      weakWebPassword(false),
       sensorFault(false),
       wateringLockout(false),
       ineffectiveCycles(0),
@@ -90,8 +97,10 @@ void SystemManager::initializeServices() {
     logger.info("Initializing network and services");
     wifi.begin();
     mqtt.begin();
+    logger.info(String("MQTT base topic: ") + mqtt.getTopicBase());
     dashboard.setManager(this);
     dashboard.begin();
+    warnInsecureDefaults();
 
     // Blynk hanya diaktifkan jika token sudah diisi; reconnect ditangani Blynk.run().
     blynkEnabled = strlen(BLYNK_AUTH_TOKEN) > 0 &&
@@ -100,6 +109,20 @@ void SystemManager::initializeServices() {
         Blynk.config(BLYNK_AUTH_TOKEN, BLYNK_SERVER, BLYNK_PORT);
     } else {
         logger.warn("Blynk token not set, Blynk disabled");
+    }
+}
+
+void SystemManager::warnInsecureDefaults() {
+    weakWebPassword = isWeakSecret(WEB_ADMIN_PASS, "aqualeaf");
+    if (weakWebPassword) {
+        logger.warn("SECURITY: WEB_ADMIN_PASS is the default or shorter than 8 chars - change it in Secrets.h");
+    }
+    if (isWeakSecret(WIFI_AP_PASSWORD, "aqualeaf123")) {
+        logger.warn("SECURITY: WIFI_AP_PASSWORD is the default (public in the repo) or too short - change it in Config.h");
+    }
+    if (MQTT_USERNAME[0] == '\0') {
+        logger.warn(String("SECURITY: MQTT has no credentials; telemetry on ") + MQTT_BROKER +
+                    " is readable by anyone subscribed to " + MQTT_TOPIC_ROOT + "#");
     }
 }
 
@@ -259,8 +282,11 @@ void SystemManager::publishTelemetry() {
     serializeJson(payload, json);
 
     if (mqtt.connected()) {
-        mqtt.publish(MQTT_TOPIC_SENSOR, json);
-        logger.debug("Published telemetry to MQTT");
+        if (mqtt.publish(MQTT_TOPIC_SENSOR, json)) {
+            logger.debug("Published telemetry to MQTT");
+        } else {
+            logger.warn(String("MQTT publish failed (payload ") + json.length() + " bytes)");
+        }
     }
 
     if (Blynk.connected()) {
@@ -354,6 +380,7 @@ String SystemManager::getStatusJson() const {
     status["daily_limit_reached"] = pump.isDailyLimitReached();
     status["pump_on_today_s"] = pump.getOnTimeTodayMs() / MS_PER_SECOND;
     status["override_remaining_s"] = getOverrideRemainingMs() / MS_PER_SECOND;
+    status["weak_web_password"] = weakWebPassword;
     status["uptime_ms"] = millis();
     String json;
     serializeJson(status, json);

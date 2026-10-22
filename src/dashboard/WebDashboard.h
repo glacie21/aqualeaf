@@ -21,6 +21,7 @@ public:
 private:
     void registerRoutes();
     bool authorize();
+    bool requireJsonBody();
     void handleRoot();
     void handleStaticFile(const String &path);
     void handleNotFound();

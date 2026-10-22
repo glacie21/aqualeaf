@@ -41,13 +41,21 @@
 /** Interval (ms) between reconnect retries */
 #define MQTT_RECONNECT_INTERVAL_MS 5000UL
 
-/** Topic root — device-unique suffix appended at runtime */
+/**
+ * Topics are built at runtime as <ROOT><device-id>/<suffix>, where device-id
+ * is the lowercase MAC without colons, e.g. "aqualeaf/a4cf12b3c4d5/sensors".
+ * The full base topic is printed to the serial log at boot.
+ *
+ * NOTE: a unique topic only keeps devices from mixing their data. On a public
+ * broker anyone subscribed to "aqualeaf/#" can still read it — use a private
+ * broker with MQTT_USERNAME / MQTT_PASSWORD for anything sensitive.
+ */
 #define MQTT_TOPIC_ROOT         "aqualeaf/"
-#define MQTT_TOPIC_SENSOR       MQTT_TOPIC_ROOT "sensors"
-#define MQTT_TOPIC_STATUS       MQTT_TOPIC_ROOT "status"
-#define MQTT_TOPIC_CMD          MQTT_TOPIC_ROOT "cmd"
-#define MQTT_TOPIC_CONFIG       MQTT_TOPIC_ROOT "config"
-#define MQTT_TOPIC_LWT          MQTT_TOPIC_ROOT "lwt"
+#define MQTT_TOPIC_SENSOR       "sensors"
+#define MQTT_TOPIC_STATUS       "status"
+#define MQTT_TOPIC_CMD          "cmd"
+#define MQTT_TOPIC_CONFIG       "config"
+#define MQTT_TOPIC_LWT          "lwt"
 
 // ============================================================
 //  Blynk

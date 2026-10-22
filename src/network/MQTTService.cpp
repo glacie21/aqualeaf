@@ -11,6 +11,7 @@
 MQTTService::MQTTService(const char *host,
                          uint16_t port,
                          const char *clientIdPrefix,
+                         const char *topicRoot,
                          const char *username,
                          const char *password,
                          uint16_t keepalive,
@@ -19,6 +20,7 @@ MQTTService::MQTTService(const char *host,
       host(host),
       port(port),
       clientIdPrefix(clientIdPrefix),
+      topicRoot(topicRoot),
       username(username),
       password(password),
       keepalive(keepalive),
@@ -27,6 +29,13 @@ MQTTService::MQTTService(const char *host,
 }
 
 void MQTTService::begin() {
+    // ID perangkat dari MAC (tanpa ':'), dipakai untuk client ID dan topic agar
+    // beberapa perangkat di broker yang sama tidak saling menimpa data.
+    deviceId = WiFi.macAddress();
+    deviceId.replace(":", "");
+    deviceId.toLowerCase();
+    topicBase = String(topicRoot) + deviceId + "/";
+
     client.setServer(host, port);
     client.setKeepAlive(keepalive);
     client.setBufferSize(PAYLOAD_MAX_LEN + TOPIC_MAX_LEN);
@@ -50,11 +59,16 @@ bool MQTTService::connected() {
     return client.connected();
 }
 
-bool MQTTService::publish(const char *topic, const String &payload) {
+bool MQTTService::publish(const char *topicSuffix, const String &payload) {
     if (!connected()) {
         return false;
     }
-    return client.publish(topic, payload.c_str(), true);
+    String topic = topicBase + topicSuffix;
+    return client.publish(topic.c_str(), payload.c_str(), true);
+}
+
+const String &MQTTService::getTopicBase() const {
+    return topicBase;
 }
 
 void MQTTService::reconnect() {
@@ -62,7 +76,7 @@ void MQTTService::reconnect() {
         return;
     }
 
-    String clientId = String(clientIdPrefix) + WiFi.macAddress();
+    String clientId = String(clientIdPrefix) + deviceId;
     if (username && username[0] != '\0') {
         client.connect(clientId.c_str(), username, password);
     } else {

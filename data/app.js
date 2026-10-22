@@ -14,6 +14,7 @@ const state = {
     wateringLockout: false,
     dailyLimitReached: false,
     overrideRemainingS: 0,
+    weakWebPassword: false,
 };
 
 // True while the user has unsaved changes in the config form,
@@ -52,6 +53,7 @@ function applyStatus(data) {
     state.wateringLockout = data.watering_lockout;
     state.dailyLimitReached = data.daily_limit_reached;
     state.overrideRemainingS = data.override_remaining_s;
+    state.weakWebPassword = data.weak_web_password;
     render();
 }
 
@@ -65,6 +67,9 @@ function renderAlerts() {
     }
     if (state.dailyLimitReached) {
         messages.push('Daily pump run-time limit reached. The pump stays off until the 24-hour window resets.');
+    }
+    if (state.weakWebPassword) {
+        messages.push('Security: the dashboard still uses the default (or a short) password. Change WEB_ADMIN_PASS in Secrets.h and re-flash.');
     }
 
     elements.alerts.replaceChildren(...messages.map((text) => {
